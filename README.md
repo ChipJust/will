@@ -53,22 +53,28 @@ Add a `config.json` to it (see `config.example.json` for the shape):
 }
 ```
 
-**3. Run bootstrap**
+**3. Run the setup script** to install prerequisites:
 
-Linux:
+Linux / macOS:
 ```bash
-bash bootstrap/setup.sh
+bash setup.sh
 ```
 
-Windows (PowerShell as Administrator):
-```powershell
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-.\bootstrap\setup.ps1
+Windows (Command Prompt or double-click):
+```
+setup.bat
 ```
 
-The bootstrap authenticates with GitHub, finds your `will-personal` repo to get
-your config, then installs all tools, clones all your repos, runs `uv sync`, and
-installs the Claude Code plugins.
+The script installs git, Node.js, uv, and Claude Code, then exits.
+
+**4. Launch Claude** from the will directory:
+```
+claude
+```
+
+Claude reads `SETUP.md`, introduces itself as the setup agent, and walks you
+through the rest — GitHub auth, cloning your repos, installing plugins, and
+verifying everything works.
 
 ### On a new machine (returning user)
 Same steps — the bootstrap finds your existing `will-personal` and picks up exactly

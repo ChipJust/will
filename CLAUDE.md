@@ -1,5 +1,13 @@
 # will
 
+## First-time setup?
+
+If `will-personal` has not been cloned and no repos beyond `will` are present on
+this machine, this is a fresh install. Read `SETUP.md` and follow its instructions
+— introduce yourself as the setup agent and ask permission before doing anything.
+
+---
+
 Meta-agent repo. This is the operating system for Chip's life — it defines the full
 multi-repo agent ecosystem, tracks open problems, and improves itself through session
 reflections.
