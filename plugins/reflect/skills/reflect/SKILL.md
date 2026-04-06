@@ -60,11 +60,26 @@ that will work in this repo. Capture:
 - Any implicit contract established this session that isn't written elsewhere
 
 This section should let the next agent pick up mid-thought, not start over.>
+
+## Next Steps
+<Re-read the Handoff section above, then scan the full session context for anything
+actionable that wasn't already captured. Split into two groups:
+
+**Agent can do immediately:**
+- [ ] <Tasks the next agent can start without asking — code, file creation, grepping for gaps, etc.>
+
+**Needs Chip:**
+- [ ] <Items that require a decision, credential, or confirmation from Chip>
+
+**Structural notes:**
+- <Observations about the system itself — stale files, missing ORIENTATION.md, superseded reflections, etc.>
+
+Be specific. Vague items belong in Things to Follow Up. This section is the startup checklist for the next session.>
 ```
 
 Be specific and honest. Future sessions will read this to re-establish context.
 Avoid generic statements like "the session went well."
-The Handoff section is the one that matters most for continuity — spend time on it.
+The Handoff section is the most important for continuity; Next Steps is the immediate action list.
 
 ---
 
