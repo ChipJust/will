@@ -28,6 +28,7 @@ the whole system.
 | `health` | Health | Active | Personal health research, supplement stack, lab tracking, metrics. |
 | `writing` | Writing | Active | Markdown documents written collaboratively with AI. |
 | `vibedaw` | Music | Active | Music context agent. Branded name retained. |
+| `money` | Personal Finance & Investment | Active | Maximize investment returns while weighing social impact of supported business activity. |
 | `giving` | Charitable Giving | Planned | Manage charitable money for the glory of Jesus Christ and love of neighbor. |
 | `prayer` | Prayer | Planned | Track prayer requests, prayers offered, and follow-up outcomes. |
 | `social-influence` | Social Influence | Planned | Maximize social impact to glorify Jesus Christ through peace, justice, and liberty; influence policy through social media; generates advertising revenue as a side-effect. |
@@ -128,3 +129,4 @@ See `problems/` directory. Current:
 | Date | Change |
 |------|--------|
 | 2026-04-06 | Initial creation; ecosystem defined; first session reflection (health) |
+| 2026-04-06 | Added money repo; UTF-8 fix applied to all PDF/VTT extractors |
