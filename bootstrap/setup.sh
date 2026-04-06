@@ -1,79 +1,80 @@
 #!/usr/bin/env bash
-# Bootstrap Chip's development workstation on Linux (Ubuntu/Debian primary target).
-# Run from the will repo root, or pipe directly:
-#   bash <(curl -sL https://raw.githubusercontent.com/ChipJust/will/main/bootstrap/setup.sh)
+# Bootstrap a workstation from the will repo.
+# Run from the will repo root: bash bootstrap/setup.sh
+#
+# Requires config.json in the repo root (copy from config.example.json).
 
 set -euo pipefail
 
-WORKSPACE="$HOME/code"
-GIT_USER_NAME="Chip Ueltschey"
-GIT_USER_EMAIL="chip@chipjust.com"   # update if email changes
-GITHUB_USER="ChipJust"
-
-REPOS=(
-    will
-    health
-    writing
-    vibedaw
-    money
-    # Add: giving prayer social-influence when created
-)
+WILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+CONFIG="$WILL_DIR/config.json"
 
 step()  { echo; echo "==> $*"; }
 ok()    { echo "    OK: $*"; }
 skip()  { echo "    --: $* (already done)"; }
+die()   { echo "ERROR: $*" >&2; exit 1; }
 
 # ---------------------------------------------------------------------------
-# Detect distro
+# Config
+# ---------------------------------------------------------------------------
+step "Reading config.json"
+[ -f "$CONFIG" ] || die "config.json not found. Copy config.example.json to config.json and fill it in."
+
+GIT_NAME=$(python3 -c "import json; d=json.load(open('$CONFIG')); print(d['git']['name'])")
+GIT_EMAIL=$(python3 -c "import json; d=json.load(open('$CONFIG')); print(d['git']['email'])")
+GITHUB_USER=$(python3 -c "import json; d=json.load(open('$CONFIG')); print(d['github']['username'])")
+WORKSPACE=$(python3 -c "import json; d=json.load(open('$CONFIG')); print(d['workspace']['linux'])")
+WORKSPACE="${WORKSPACE/#\~/$HOME}"
+REPOS=$(python3 -c "import json; d=json.load(open('$CONFIG')); print(' '.join(d['repos']))")
+read -ra REPOS <<< "$REPOS"
+
+ok "Name: $GIT_NAME | GitHub: $GITHUB_USER | Workspace: $WORKSPACE"
+
+# ---------------------------------------------------------------------------
+# Detect package manager
 # ---------------------------------------------------------------------------
 if command -v apt-get &>/dev/null; then
-    PKG_INSTALL="sudo apt-get install -y"
-    PKG_UPDATE="sudo apt-get update"
+    PKG="sudo apt-get install -y"
+    sudo apt-get update -qq
 elif command -v dnf &>/dev/null; then
-    PKG_INSTALL="sudo dnf install -y"
-    PKG_UPDATE="sudo dnf check-update || true"
+    PKG="sudo dnf install -y"
 elif command -v brew &>/dev/null; then
-    PKG_INSTALL="brew install"
-    PKG_UPDATE="brew update"
+    PKG="brew install"
+    brew update
 else
-    echo "Unsupported package manager. Install git, gh, node, curl manually then re-run."
-    exit 1
+    die "No supported package manager found (apt, dnf, brew)."
 fi
 
 # ---------------------------------------------------------------------------
-# 1. System packages
+# Core packages
 # ---------------------------------------------------------------------------
-step "Updating package index"
-$PKG_UPDATE
-
 step "Installing system packages"
-$PKG_INSTALL git curl wget build-essential libssl-dev
+$PKG git curl wget build-essential 2>/dev/null || $PKG git curl wget
 
 # ---------------------------------------------------------------------------
-# 2. GitHub CLI
+# GitHub CLI
 # ---------------------------------------------------------------------------
-step "Installing GitHub CLI"
+step "GitHub CLI"
 if command -v gh &>/dev/null; then
-    skip "gh"
+    skip "gh $(gh --version | head -1)"
 else
-    # Ubuntu/Debian path
     if command -v apt-get &>/dev/null; then
         curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
             | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
         echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] \
             https://cli.github.com/packages stable main" \
-            | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-        sudo apt-get update && sudo apt-get install gh -y
+            | sudo tee /etc/apt/sources.list.d/github-cli.list >/dev/null
+        sudo apt-get update -qq && sudo apt-get install -y gh
     else
-        $PKG_INSTALL gh
+        $PKG gh
     fi
     ok "gh installed"
 fi
 
 # ---------------------------------------------------------------------------
-# 3. Node.js (LTS via nvm)
+# Node.js (via nvm)
 # ---------------------------------------------------------------------------
-step "Installing Node.js via nvm"
+step "Node.js"
 if command -v node &>/dev/null; then
     skip "node $(node --version)"
 else
@@ -86,21 +87,21 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 4. uv
+# uv
 # ---------------------------------------------------------------------------
-step "Installing uv"
+step "uv"
 if command -v uv &>/dev/null; then
     skip "uv $(uv --version)"
 else
     curl -LsSf https://astral.sh/uv/install.sh | sh
-    export PATH="$HOME/.cargo/bin:$PATH"
+    export PATH="$HOME/.local/bin:$PATH"
     ok "uv installed"
 fi
 
 # ---------------------------------------------------------------------------
-# 5. Claude Code
+# Claude Code
 # ---------------------------------------------------------------------------
-step "Installing Claude Code"
+step "Claude Code"
 if command -v claude &>/dev/null; then
     skip "claude already installed"
 else
@@ -109,65 +110,62 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 6. Android platform-tools (adb)
+# Android platform-tools (adb)
 # ---------------------------------------------------------------------------
-step "Installing Android platform-tools (adb)"
+step "ADB (Android platform-tools)"
 if command -v adb &>/dev/null; then
     skip "adb"
 else
-    $PKG_INSTALL android-tools-adb 2>/dev/null || {
-        echo "    Falling back to manual install..."
-        ADB_ZIP="platform-tools-latest-linux.zip"
-        curl -O "https://dl.google.com/android/repository/$ADB_ZIP"
-        unzip -q "$ADB_ZIP" -d "$HOME"
-        rm "$ADB_ZIP"
+    $PKG android-tools-adb 2>/dev/null || {
+        echo "    Downloading platform-tools..."
+        curl -O "https://dl.google.com/android/repository/platform-tools-latest-linux.zip"
+        unzip -q platform-tools-latest-linux.zip -d "$HOME"
+        rm platform-tools-latest-linux.zip
         echo "export PATH=\"\$HOME/platform-tools:\$PATH\"" >> "$HOME/.bashrc"
         export PATH="$HOME/platform-tools:$PATH"
     }
-    ok "adb installed"
+    ok "adb ready"
 fi
 
 # ---------------------------------------------------------------------------
-# 7. KDE Connect (Linux desktop ↔ Pixel 7)
+# KDE Connect
 # ---------------------------------------------------------------------------
-step "Installing KDE Connect"
+step "KDE Connect (phone integration)"
 if command -v kdeconnect-cli &>/dev/null; then
-    skip "kdeconnect already installed"
+    skip "kdeconnect"
 else
-    $PKG_INSTALL kdeconnect || echo "    KDE Connect not available in repos; install manually"
+    $PKG kdeconnect 2>/dev/null && ok "kdeconnect installed" || echo "    Not available in repos — install manually"
 fi
 
 # ---------------------------------------------------------------------------
-# 8. Git configuration
+# Git config
 # ---------------------------------------------------------------------------
-step "Configuring Git"
-git config --global user.name "$GIT_USER_NAME"
-git config --global user.email "$GIT_USER_EMAIL"
+step "Git configuration"
+git config --global user.name "$GIT_NAME"
+git config --global user.email "$GIT_EMAIL"
 git config --global init.defaultBranch main
 git config --global core.autocrlf input
-ok "Git configured for $GIT_USER_NAME"
+ok "Git configured"
 
 # ---------------------------------------------------------------------------
-# 9. GitHub authentication
+# GitHub auth
 # ---------------------------------------------------------------------------
-step "GitHub CLI authentication"
+step "GitHub authentication"
 if gh auth status &>/dev/null; then
     skip "already authenticated"
 else
-    echo "    Launching interactive GitHub login..."
     gh auth login
 fi
 
 # ---------------------------------------------------------------------------
-# 10. Clone repos
+# Clone repos
 # ---------------------------------------------------------------------------
 step "Cloning repos to $WORKSPACE"
 mkdir -p "$WORKSPACE"
-
 for repo in "${REPOS[@]}"; do
     dest="$WORKSPACE/$repo"
     if [ -d "$dest/.git" ]; then
-        skip "$repo already cloned"
+        skip "$repo"
     else
         echo "    Cloning $GITHUB_USER/$repo..."
         gh repo clone "$GITHUB_USER/$repo" "$dest"
@@ -176,13 +174,13 @@ for repo in "${REPOS[@]}"; do
 done
 
 # ---------------------------------------------------------------------------
-# 11. uv sync in each repo
+# uv sync
 # ---------------------------------------------------------------------------
-step "Running uv sync in repos with pyproject.toml"
+step "uv sync in repos with pyproject.toml"
 for repo in "${REPOS[@]}"; do
     pyproject="$WORKSPACE/$repo/pyproject.toml"
     if [ -f "$pyproject" ]; then
-        echo "    uv sync: $repo..."
+        echo "    uv sync: $repo"
         (cd "$WORKSPACE/$repo" && uv sync)
         ok "$repo synced"
     else
@@ -191,16 +189,22 @@ for repo in "${REPOS[@]}"; do
 done
 
 # ---------------------------------------------------------------------------
-# 12. Post-setup checklist
+# Install will plugins into Claude Code
+# ---------------------------------------------------------------------------
+step "Installing Claude Code plugins"
+bash "$WILL_DIR/plugins/install.sh"
+
+# ---------------------------------------------------------------------------
+# Done
 # ---------------------------------------------------------------------------
 echo
-echo "$(printf '=%.0s' {1..60})"
-echo "Bootstrap complete. Manual steps remaining:"
-echo ""
-echo "  [ ] Pair KDE Connect: open app on Pixel 7, approve on desktop"
-echo "  [ ] Enable ADB on Pixel 7: Settings > Developer Options > USB Debugging"
-echo "  [ ] Verify ingest: uv run python tools/ingest.py --help  (in health/ or money/)"
+printf '=%.0s' {1..60}; echo
+echo "Bootstrap complete."
+echo
+echo "Manual steps:"
+echo "  [ ] source ~/.bashrc  (or open a new terminal)"
+echo "  [ ] Pair KDE Connect: install on Pixel, approve on desktop"
+echo "  [ ] Enable USB debugging on phone (Settings > Developer Options)"
 echo "  [ ] Install LaTeX for PDF generation: uv run python tools/setup.py  (in health/)"
-echo "  [ ] Reload shell: source ~/.bashrc (or open new terminal)"
-echo ""
-echo "See will/bootstrap/README.md for full post-setup notes."
+echo
+echo "See will/bootstrap/README.md for full notes."

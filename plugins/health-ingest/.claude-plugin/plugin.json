@@ -1,0 +1,8 @@
+{
+  "name": "health-ingest",
+  "description": "Ingest research papers and transcripts into the health research library as versioned markdown.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Chip Ueltschey"
+  }
+}

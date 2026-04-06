@@ -1,0 +1,24 @@
+{
+  "_comment": "Copy this file to config.json (gitignored) and fill in your details.",
+
+  "git": {
+    "name": "Your Name",
+    "email": "you@example.com"
+  },
+
+  "github": {
+    "username": "your-github-username"
+  },
+
+  "workspace": {
+    "windows": "C:\\code",
+    "linux": "~/code"
+  },
+
+  "repos": [
+    "will"
+  ],
+
+  "_repos_note": "List every repo you want bootstrapped. Add your own context repos here.",
+  "_example_repos": ["will", "health", "writing", "music", "money", "giving", "prayer"]
+}

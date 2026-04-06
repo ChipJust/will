@@ -1,0 +1,8 @@
+{
+  "name": "reflect",
+  "description": "End-of-session reflection skill. Summarizes the session and writes a dated reflection file to the will repo.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Chip Ueltschey"
+  }
+}
