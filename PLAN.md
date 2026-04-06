@@ -63,23 +63,19 @@ re-establish context quickly after long gaps.
 ## Portability
 
 **Current machine:** Windows 10 Pro (D:\_code\ workspace)
+**Machine spec:** See `system/hardware.md` — i9-9960X, 128GB RAM, ASRock X299 Steel Legend.
 
-**Known portability problem:** Windows does not support Chip's hardware.
-See `problems/windows-hardware.md`.
+**Known portability problem:** Windows does not support Chip's target hardware.
+See `problems/windows-hardware.md`. Linux migration is the recommended path.
 
-**New machine setup checklist** (to be built out):
-- [ ] Install Git, `uv`, `gh` CLI
-- [ ] Clone all repos to equivalent code directory
-- [ ] Configure Git user (Chip Ueltschey, ChipJust)
-- [ ] Run `gh auth login`
-- [ ] Install Claude Code CLI
-- [ ] Restore `~/.claude/` — plugins, memory, settings
-- [ ] Run `uv sync` in each repo that has a `pyproject.toml`
-- [ ] Verify LaTeX/TinyTeX for PDF generation (health repo)
-- [ ] Re-test ingest tooling on a sample PDF
+**Bootstrap:** Run `bootstrap/setup.sh` (Linux) or `bootstrap/setup.ps1` (Windows)
+from the will repo. One command installs all tools, clones all repos, runs uv sync.
 
-The `~/.claude/` directory is the single most important thing to port — it holds
-all skills, plugins, and memory.
+**Critical thing to port:** `~/.claude/` — contains all plugins, memory, and settings.
+This directory must be backed up or re-built on any new machine.
+
+**Planned Linux migration:** See `system/hardware.md` for dual-boot approach and
+distro recommendation (Ubuntu 24.04 LTS). Machine is fully compatible with Linux.
 
 ---
 
@@ -130,3 +126,4 @@ See `problems/` directory. Current:
 |------|--------|
 | 2026-04-06 | Initial creation; ecosystem defined; first session reflection (health) |
 | 2026-04-06 | Added money repo; UTF-8 fix applied to all PDF/VTT extractors |
+| 2026-04-06 | Added hardware spec, bootstrap scripts, system conventions, AI hardware research |
