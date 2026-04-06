@@ -48,10 +48,23 @@ Use this structure:
 ## System Observations
 <Anything about how the Claude Code system itself (skills, memory, hooks, tooling)
  could be improved based on this session>
+
+## Handoff to Next Agent
+<This is the most important section. Write it directly to the next Claude agent
+that will work in this repo. Capture:
+- The thinking frame that made this session productive — not just what was built
+  but how to *think* about this space
+- What the user responds well to (specific framing, level of detail, initiative)
+- Anti-patterns to avoid (e.g. "don't propose to rebuild X — it already exists")
+- The design philosophy of key systems, in a sentence each
+- Any implicit contract established this session that isn't written elsewhere
+
+This section should let the next agent pick up mid-thought, not start over.>
 ```
 
 Be specific and honest. Future sessions will read this to re-establish context.
 Avoid generic statements like "the session went well."
+The Handoff section is the one that matters most for continuity — spend time on it.
 
 ---
 
