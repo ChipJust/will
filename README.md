@@ -36,16 +36,21 @@ The **will** repo sees across all agents and improves the whole system.
 
 ## Getting started
 
-**1. Clone this repo**
+**1. Fork this repo** on GitHub, then clone it:
 ```bash
-gh repo clone <your-fork>/will
+gh repo clone <your-username>/will
 cd will
 ```
 
-**2. Create your config**
-```bash
-cp config.example.json config.json
-# Edit config.json: your name, email, GitHub username, workspace path, repo list
+**2. Create your personal repo** on GitHub: `<your-username>/will-personal` (private).
+Add a `config.json` to it (see `config.example.json` for the shape):
+```json
+{
+  "git": { "name": "Your Name", "email": "you@example.com" },
+  "github": { "username": "your-username" },
+  "workspace": { "windows": "C:\\code", "linux": "~/code" },
+  "repos": ["will", "will-personal"]
+}
 ```
 
 **3. Run bootstrap**
@@ -61,8 +66,19 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 .\bootstrap\setup.ps1
 ```
 
-The bootstrap installs all tools, clones your repos, runs `uv sync`, and installs
-the Claude Code plugins that make the agents work.
+The bootstrap authenticates with GitHub, finds your `will-personal` repo to get
+your config, then installs all tools, clones all your repos, runs `uv sync`, and
+installs the Claude Code plugins.
+
+### On a new machine (returning user)
+Same steps — the bootstrap finds your existing `will-personal` and picks up exactly
+where you left off.
+
+## Personal content
+
+Your reflections, notes, hardware specs, and `config.json` live in a private
+`<your-username>/will-personal` repo. The bootstrap clones it automatically once
+you authenticate. Nothing personal is ever pushed to this public repo.
 
 ---
 
