@@ -6,6 +6,8 @@ It re-establishes the architecture and cross-cutting state of the whole ecosyste
 
 ---
 
+*Last updated: 2026-04-07*
+
 ## The system in one paragraph
 
 Chip is building a multi-repo AI agent ecosystem — one repo per life context (health,
@@ -24,7 +26,7 @@ AI-assisted operating system for intentional living, grounded in Christian value
 | `will` | Active | Public framework: plugins, bootstrap, conventions |
 | `will-personal` | Active | Private layer: config, reflections, problems, hardware |
 | `health` | Active | Health research framework: ingest tooling, research refs |
-| `health-personal` | Active | Personal health data: Chip's records, Paige's profile |
+| `health-personal` | Active | Personal health data: Chip's records, Paige's profile (in progress) |
 | `money` | Active | Investment research, financial + social-impact analysis |
 | `writing` | Active | Markdown documents written collaboratively |
 | `vibedaw` | Active | Music context agent |
