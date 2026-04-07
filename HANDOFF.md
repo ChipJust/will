@@ -23,7 +23,8 @@ AI-assisted operating system for intentional living, grounded in Christian value
 |------|--------|-------------|
 | `will` | Active | Public framework: plugins, bootstrap, conventions |
 | `will-personal` | Active | Private layer: config, reflections, problems, hardware |
-| `health` | Active | Health research, supplement stack, ingest tooling |
+| `health` | Active | Health research framework: ingest tooling, research refs |
+| `health-personal` | Active | Personal health data: Chip's records, Paige's profile |
 | `money` | Active | Investment research, financial + social-impact analysis |
 | `writing` | Active | Markdown documents written collaboratively |
 | `vibedaw` | Active | Music context agent |
