@@ -22,16 +22,20 @@ done
 
 # Register will-plugins marketplace in known_marketplaces.json
 if [ -f "$KNOWN_MARKETPLACES" ]; then
-    python3 - <<PYEOF
-import json, sys
-with open("$KNOWN_MARKETPLACES") as f:
+    # Convert Unix-style paths to Windows paths for Python on Windows
+    WIN_MARKETPLACES="$(cygpath -w "$KNOWN_MARKETPLACES" 2>/dev/null || echo "$KNOWN_MARKETPLACES")"
+    WIN_WILL_PLUGINS="$(cygpath -w "$WILL_DIR/plugins" 2>/dev/null || echo "$WILL_DIR/plugins")"
+    WIN_CLAUDE_PLUGINS="$(cygpath -w "$CLAUDE_PLUGINS" 2>/dev/null || echo "$CLAUDE_PLUGINS")"
+    python - <<PYEOF
+import json
+with open(r"$WIN_MARKETPLACES") as f:
     data = json.load(f)
 data["will-plugins"] = {
-    "source": {"source": "local", "path": "$WILL_DIR/plugins"},
-    "installLocation": "$CLAUDE_PLUGINS",
+    "source": {"source": "local", "path": r"$WIN_WILL_PLUGINS"},
+    "installLocation": r"$WIN_CLAUDE_PLUGINS",
     "lastUpdated": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 }
-with open("$KNOWN_MARKETPLACES", "w") as f:
+with open(r"$WIN_MARKETPLACES", "w") as f:
     json.dump(data, f, indent=2)
 print("    Registered will-plugins marketplace")
 PYEOF
