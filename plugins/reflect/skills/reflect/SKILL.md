@@ -135,7 +135,32 @@ The Handoff section is the most important for continuity; Next Steps is the imme
 
 ---
 
-### Step 3 — Update memory
+### Step 3 — Propagate Handoff to subject repo
+
+After writing the reflection, extract the **Handoff to Next Agent** section and write it
+to `D:\_code\<repo>\HANDOFF.md`. This is the "wake-up file" for the next agent that opens
+that repo — it should re-establish the thinking frame without requiring a full reflection read.
+
+Format:
+```markdown
+# <Repo> — Agent Handoff
+*Last updated: YYYY-MM-DD (from session reflection)*
+
+<full content of the Handoff to Next Agent section>
+```
+
+If `HANDOFF.md` already exists in that repo, **replace it entirely** — it should always
+reflect the most recent session. Old thinking frames should not accumulate here; they
+already live in the reflection archive.
+
+Also commit the update to the subject repo:
+```
+cd D:\_code\<repo> && git add HANDOFF.md && git commit -m "Update agent handoff: YYYY-MM-DD" && git push
+```
+
+---
+
+### Step 4 — Update memory
 
 After writing the reflection, review whether any memory files need updating:
 
@@ -147,7 +172,7 @@ Update or create memory files as needed. Do not duplicate what's already in memo
 
 ---
 
-### Step 4 — Update PLAN.md in will repo
+### Step 5 — Update PLAN.md in will repo
 
 If the session revealed a gap in the system architecture, a new repo is needed, or a
 problem was logged or resolved, update `D:\_code\will\PLAN.md` accordingly:
@@ -157,7 +182,7 @@ problem was logged or resolved, update `D:\_code\will\PLAN.md` accordingly:
 
 ---
 
-### Step 5 — Commit the reflection
+### Step 6 — Commit the reflection
 
 ```
 cd D:\_code\will-personal && git add reflections/ && git commit -m "Add session reflection: YYYY-MM-DD <repo>" && git push
