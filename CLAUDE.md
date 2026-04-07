@@ -28,6 +28,15 @@ agent that manages all of them. It holds:
 - `problems/` — logged issues blocking the system
 - `system/` — repo ecosystem definition and conventions
 
+## Session start (wake-up routine)
+
+Before doing anything else in a new session:
+1. Read `HANDOFF.md` — current system state, cross-cutting concerns, open items
+2. Read `ORIENTATION.md` — what lives here and design principles
+3. Read `PLAN.md` — master architecture if doing structural work
+
+Or just run `/wake` and it handles all of this.
+
 ## Working here
 
 - Branch: `main`
