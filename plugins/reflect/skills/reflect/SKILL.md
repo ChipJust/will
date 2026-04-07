@@ -72,28 +72,9 @@ Use this structure:
 **Date:** YYYY-MM-DD
 **Repo:** `<repo>` (ChipJust/<repo>)
 
-## What Was Built / Decided
-<Bullet list of concrete outputs: files created, features added, decisions made>
-
-## What Worked Well
-<What to repeat in future sessions>
-
-## What Could Be Improved
-<Friction points, wrong assumptions, things that slowed us down>
-
-## Decisions Made
-<Non-obvious choices that future sessions should know about, with brief rationale>
-
-## Things to Follow Up
-- [ ] <Unfinished items or questions that surfaced>
-
-## System Observations
-<Anything about how the Claude Code system itself (skills, memory, hooks, tooling)
- could be improved based on this session>
-
 ## Handoff to Next Agent
-<This is the most important section. Write it directly to the next Claude agent
-that will work in this repo. Capture:
+<This is the most important section — put it first so /wake can stop reading early.
+Write it directly to the next Claude agent that will work in this repo. Capture:
 - The thinking frame that made this session productive — not just what was built
   but how to *think* about this space
 - What the user responds well to (specific framing, level of detail, initiative)
@@ -127,11 +108,30 @@ Split the final list into:
 - <Observations about the system — stale files, missing ORIENTATION.md, superseded reflections, etc.>
 
 Be specific. Vague items belong in Things to Follow Up. This is the startup checklist for the next session.>
+
+## What Was Built / Decided
+<Bullet list of concrete outputs: files created, features added, decisions made>
+
+## What Worked Well
+<What to repeat in future sessions>
+
+## What Could Be Improved
+<Friction points, wrong assumptions, things that slowed us down>
+
+## Decisions Made
+<Non-obvious choices that future sessions should know about, with brief rationale>
+
+## Things to Follow Up
+- [ ] <Unfinished items or questions that surfaced>
+
+## System Observations
+<Anything about how the Claude Code system itself (skills, memory, hooks, tooling)
+ could be improved based on this session>
 ```
 
 Be specific and honest. Future sessions will read this to re-establish context.
 Avoid generic statements like "the session went well."
-The Handoff section is the most important for continuity; Next Steps is the immediate action list.
+Handoff + Next Steps are at the top — that's what /wake reads first and needs most.
 
 ---
 
