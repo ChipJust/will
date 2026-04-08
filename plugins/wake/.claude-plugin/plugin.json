@@ -1,0 +1,8 @@
+{
+  "name": "wake",
+  "description": "Session start skill. Loads the four-layer context stack (system, personal, repo, personal-repo) and presents a concise brief before work begins.",
+  "version": "1.2.0",
+  "author": {
+    "name": "Chip Ueltschey"
+  }
+}
