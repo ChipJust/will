@@ -1,12 +1,10 @@
 # will — System Handoff
-*Last updated: 2026-04-06*
+*Last updated: 2026-04-08*
 
 This is the system-level context loaded by `/wake` before any subject-repo briefing.
 It re-establishes the architecture and cross-cutting state of the whole ecosystem.
 
 ---
-
-*Last updated: 2026-04-07*
 
 ## The system in one paragraph
 

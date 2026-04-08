@@ -33,12 +33,14 @@ Adding a new skill = new directory following that pattern, then re-run install.s
 
 ### Bootstrap (`bootstrap/`)
 
-- `setup.sh` — Linux/Mac: minimal install (Claude Code + gh), then exits
+- `setup.sh` — Linux/Mac: 3-phase full bootstrap (install tools, authenticate GitHub,
+  clone repos, configure git, install plugins)
 - `setup.ps1` — Windows: same
-- `README.md` — explains the two-phase setup flow
+- `README.md` — usage notes and post-setup checklist
 
-The setup scripts are intentionally minimal. The Claude-as-setup-agent in SETUP.md
-handles the full configuration after Claude Code is running.
+The root `setup.sh` / `setup.bat` are the *minimal* first-run scripts (prereqs only).
+The setup agent (`SETUP.md`) runs the bootstrap scripts as its execution engine
+after Claude Code is installed.
 
 ### System conventions (`system/conventions.md`)
 

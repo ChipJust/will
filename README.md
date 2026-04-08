@@ -80,14 +80,6 @@ verifying everything works.
 Same steps — the bootstrap finds your existing `will-personal` and picks up exactly
 where you left off.
 
-## Personal content
-
-Your reflections, notes, hardware specs, and `config.json` live in a private
-`<your-username>/will-personal` repo. The bootstrap clones it automatically once
-you authenticate. Nothing personal is ever pushed to this public repo.
-
----
-
 ## What you get
 
 - **Git, gh, uv, Node.js, Claude Code** — all installed and configured
