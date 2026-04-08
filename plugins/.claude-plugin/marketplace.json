@@ -1,0 +1,28 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "will-plugins",
+  "description": "Personal plugins for Chip's will agent ecosystem — reflect, wake, and subject-repo tools",
+  "owner": {
+    "name": "Chip Ueltschey"
+  },
+  "plugins": [
+    {
+      "name": "reflect",
+      "description": "End-of-session reflection skill. Summarizes the session and writes a dated reflection file to the will repo.",
+      "source": "./plugins/reflect",
+      "category": "productivity"
+    },
+    {
+      "name": "wake",
+      "description": "Session start skill. Loads the four-layer context stack and presents a concise brief before work begins.",
+      "source": "./plugins/wake",
+      "category": "productivity"
+    },
+    {
+      "name": "health-ingest",
+      "description": "Research paper ingest fallback decision tree for the health repo.",
+      "source": "./plugins/health-ingest",
+      "category": "productivity"
+    }
+  ]
+}
