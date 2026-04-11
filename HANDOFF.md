@@ -68,3 +68,4 @@ Never `git add -A`. Never commit PDFs, `.venv/`, `egg-info/`, or `output/`.
 - [ ] Tenstorrent Grayskull e75: evaluate cost-per-token vs Claude API
 - [ ] Bootstrap: test setup.sh end-to-end on a clean Linux machine
 - [ ] `giving`, `prayer`, `social-influence` repos: create when ready to start
+- [ ] Modernize HANDOFF.md in `money`, `writing`, `vibedaw` — strip cross-cutting sections (now in will-personal Layer 2); follow the health pattern from 2026-04-10
