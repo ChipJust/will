@@ -123,6 +123,7 @@ Be specific. Vague items belong in Things to Follow Up. This is the startup chec
 
 ## Things to Follow Up
 - [ ] <Unfinished items or questions that surfaced>
+- [↑ will] <Items tagged this way bubble up to `will/HANDOFF.md` open items — use for cross-cutting observations that affect multiple repos or the meta-system>
 
 ## System Observations
 <Anything about how the Claude Code system itself (skills, memory, hooks, tooling)
@@ -172,8 +173,20 @@ Update or create memory files as needed. Do not duplicate what's already in memo
 
 ---
 
-### Step 5 — Update PLAN.md in will repo
+### Step 5 — Update will repo
 
+**5a — Bubble up `[↑ will]` items:**
+Scan the reflection's "Things to Follow Up" section for items tagged `[↑ will]`.
+For each one, append it to the "Open system-level items" list in `D:\_code\will\HANDOFF.md`:
+```
+- [ ] <item text> (from <repo> session YYYY-MM-DD)
+```
+Then commit:
+```
+cd D:\_code\will && git add HANDOFF.md && git commit -m "HANDOFF: bubble up items from <repo> YYYY-MM-DD" && git push
+```
+
+**5b — Update PLAN.md if architecture changed:**
 If the session revealed a gap in the system architecture, a new repo is needed, or a
 problem was logged or resolved, update `D:\_code\will\PLAN.md` accordingly:
 - Add to revision history table
