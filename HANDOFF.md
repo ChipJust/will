@@ -64,8 +64,8 @@ Never `git add -A`. Never commit PDFs, `.venv/`, `egg-info/`, or `output/`.
 
 ## Open system-level items
 
-- [ ] Linux migration: dual-boot Ubuntu 24.04 on 240GB SATA SSD (see hardware.md)
-- [ ] Tenstorrent Grayskull e75: evaluate cost-per-token vs Claude API
+- [ ] Linux migration: dual-boot Ubuntu 24.04 on 240GB SATA SSD — linked to laptop purchase (see will-personal/hardware/projects/2026-hardware-refresh.md)
+- [ ] Tenstorrent AI accelerator: Grayskull is EOL — evaluate Wormhole n150s (~$999) or Blackhole (see will-personal/hardware/projects/2026-hardware-refresh.md)
 - [ ] Bootstrap: test setup.sh end-to-end on a clean Linux machine
 - [ ] `giving`, `prayer`, `social-influence` repos: create when ready to start
 - [ ] Modernize HANDOFF.md in `money`, `writing`, `vibedaw` — strip cross-cutting sections (now in will-personal Layer 2); follow the health pattern from 2026-04-10
