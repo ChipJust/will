@@ -49,8 +49,17 @@ Or just run `/wake` and it handles all of this.
 - **Package manager:** `uv` (if/when tooling is added)
 - **GitHub CLI:** `gh` authenticated as ChipJust
 
+## agent-tools/
+
+Cross-repo Python scripts and utilities — tools that skills call, and scripts that need
+to work across all repos (health, money, writing, etc.). This is the one place in this
+repo where executable code lives.
+
+- `statusline.py` — Claude Code status line, registered in `~/.claude/settings.json`
+- Each script documents its expected input and output in its module docstring (sample
+  JSON in, sample string out). Read the docstring before writing any parsing code.
+
 ## Conventions
 
 - Reflections are named `YYYY-MM-DD-<repo>.md` (e.g. `2026-04-06-health.md`)
 - Problems are named by topic (e.g. `windows-hardware.md`)
-- No code lives here — this is a planning and reflection repo
