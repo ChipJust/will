@@ -1,6 +1,6 @@
 # Will — System Architecture Plan
 
-*Last updated: 2026-04-08*
+*Last updated: 2026-04-19*
 
 This document defines the full multi-repo agent ecosystem Chip is building to manage
 life intentionally, with AI assistance across every major context.
@@ -122,6 +122,12 @@ See `will-personal/problems/`. Current:
 - **Research ingest:** `tools/ingest.py` → `research/refs/` (health repo pattern; portable to others)
 - **Memory:** `~/.claude/projects/<project>/memory/` — persists across sessions
 - **Skills:** `~/.claude/plugins/marketplaces/will-plugins/plugins/` (will repo skills)
+- **Claude Code permissions (three-tier):**
+  - `~/.claude/settings.json` — user-global `permissions.allow` for safe cross-repo commands
+  - `<repo>/.claude/settings.json` — committed, curated per-repo workflow allow list (Pattern B prefix wildcards)
+  - `<repo>/.claude/settings.local.json` — gitignored, organic personal overrides
+  - CLAUDE.md is NOT a permission surface — it's model context only. Enforcement lives in `settings.json` alone.
+  - Every repo's `.gitignore` uses the whitelist pattern: `.claude/*\n!.claude/settings.json`
 
 ---
 
@@ -133,3 +139,4 @@ See `will-personal/problems/`. Current:
 | 2026-04-06 | Added money repo; UTF-8 fix applied to all PDF/VTT extractors |
 | 2026-04-06 | Added hardware spec, bootstrap scripts, system conventions, AI hardware research |
 | 2026-04-08 | Fix stale paths (will-personal refs); fix bootstrap description in ORIENTATION.md |
+| 2026-04-19 | Add three-tier Claude Code permission convention to System Conventions; deployed across all 7 active repos |
