@@ -79,3 +79,5 @@ Never `git add -A`. Never commit PDFs, `.venv/`, `egg-info/`, or `output/`.
 - [ ] `giving`, `prayer`, `social-influence` repos: create when ready to start
 - [ ] Modernize HANDOFF.md in `money`, `writing`, `vibedaw` — strip cross-cutting sections (now in will-personal Layer 2); follow the health pattern from 2026-04-10
 - [ ] Add `hardware/` tracking pattern to will PLAN.md (new content category in will-personal, from 2026-04-12 session)
+- [ ] money repo is now the most data-intensive repo — PLAN.md should note the data/holdings + predictions.csv patterns as potentially reusable across repos (from money session 2026-04-19)
+- [ ] Document the `allowed tools` pattern in CLAUDE.md as a system convention — pre-approving specific tool commands eliminates major friction for tool-heavy workflows (from money session 2026-04-19)

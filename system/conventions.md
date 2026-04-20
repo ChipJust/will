@@ -3,6 +3,11 @@
 Rules that apply across all repos and all sessions. Claude reads these to
 calibrate behavior without needing reminders.
 
+**See also:** `context-architecture.md` for the linked-node pattern that
+organizes knowledge across every repo. Any file you create should fit that
+pattern (one topic per node, discoverable via an index, connected by explicit
+links).
+
 ---
 
 ## Working style

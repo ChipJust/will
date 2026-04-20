@@ -18,6 +18,11 @@ Each repo is an **agent** representing a specific life context. Each agent:
 The `will` repo is the **meta-agent** — it sees across all contexts and optimizes
 the whole system.
 
+**Knowledge is organized as linked nodes.** Small, addressable files connected by
+explicit references from indexes. Agents compose context by navigating links, not
+by pre-loading the corpus. See `system/context-architecture.md` for the rules and
+rationale — this is a foundational design decision that applies to every repo.
+
 ---
 
 ## Repo Ecosystem
