@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(uv run python agent-tools/:*)",
+      "Bash(python agent-tools/:*)",
+      "Bash(bash plugins/install.sh:*)",
+      "Bash(claude plugins:*)"
+    ]
+  }
+}

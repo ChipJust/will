@@ -3,4 +3,6 @@ config.json
 .venv/
 __pycache__/
 *.pyc
-.claude/
+# Claude Code: ignore everything in .claude/ except the committed settings.json
+.claude/*
+!.claude/settings.json
