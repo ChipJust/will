@@ -23,6 +23,7 @@ claude plugins marketplace add "$WILL_DIR"
 echo "==> Installing plugins"
 claude plugins install wake
 claude plugins install reflect
+claude plugins install commit-push
 claude plugins install health-ingest 2>/dev/null || echo "    (health-ingest skipped — may not be listed yet)"
 
 echo "==> Done. Restart Claude Code to pick up the new skills."

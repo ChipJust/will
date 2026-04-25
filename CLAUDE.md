@@ -49,13 +49,15 @@ Or just run `/wake` and it handles all of this.
 - **Package manager:** `uv` (if/when tooling is added)
 - **GitHub CLI:** `gh` authenticated as ChipJust
 
-## agent-tools/
+## tools/
 
 Cross-repo Python scripts and utilities — tools that skills call, and scripts that need
 to work across all repos (health, money, writing, etc.). This is the one place in this
-repo where executable code lives.
+repo where executable code lives. Every topic repo also has a `tools/` directory with
+its own per-repo scripts; the convention is consistent.
 
 - `statusline.py` — Claude Code status line, registered in `~/.claude/settings.json`
+- `commit_push.py` — staged + commit + push as a single approved CLI call
 - Each script documents its expected input and output in its module docstring (sample
   JSON in, sample string out). Read the docstring before writing any parsing code.
 

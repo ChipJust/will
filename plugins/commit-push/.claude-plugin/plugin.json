@@ -1,0 +1,8 @@
+{
+  "name": "commit-push",
+  "description": "Skill that wraps the commit_push.py tool — replaces the git add/commit/push chain with one pre-approved CLI call.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Chip Ueltschey"
+  }
+}

@@ -26,7 +26,7 @@ in every repo. Examples: `Bash(git status:*)`, `Bash(ls:*)`, `Bash(uv:*)`,
 `Bash(gh pr list:*)`. Read-only or universally safe.
 
 **Tier 2 (`<repo>/.claude/settings.json`)** — workflows specific to this repo.
-Examples in the will repo: `Bash(uv run python agent-tools/:*)`,
+Examples in the will repo: `Bash(uv run python tools/:*)`,
 `Bash(bash plugins/install.sh:*)`. Curated by hand; this is what gets reviewed
 in PRs.
 
@@ -37,18 +37,18 @@ local.
 
 ## Pattern A vs Pattern B
 
-**Pattern A — tool-specific:** `Bash(uv run python agent-tools/statusline.py:*)`
+**Pattern A — tool-specific:** `Bash(uv run python tools/statusline.py:*)`
 - Tight scope, audit-friendly
 - Must add an entry every time a new script appears
 - Use when targets need explicit review
 
-**Pattern B — directory-prefix wildcard:** `Bash(uv run python agent-tools/:*)`
+**Pattern B — directory-prefix wildcard:** `Bash(uv run python tools/:*)`
 - Zero-maintenance — any script under that directory is pre-approved
 - Broader trust scope (anything with that prefix runs)
 - Use when directory contents are all trusted by construction (your own tools)
 
-This ecosystem uses Pattern B for tool directories (`agent-tools/`, `tools/`)
-and Pattern A only when narrower scope is genuinely needed.
+This ecosystem uses Pattern B for tool directories (`tools/`) and Pattern A
+only when narrower scope is genuinely needed.
 
 ## CLAUDE.md is not a permission surface
 
