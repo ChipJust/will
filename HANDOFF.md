@@ -52,6 +52,14 @@ Windows cp1252 silently corrupts special characters. This is a known gotcha.
 
 **Commit style:** "commit" = stage specific files + commit + push. No prompts.
 Never `git add -A`. Never commit PDFs, `.venv/`, `egg-info/`, or `output/`.
+Use `will/tools/commit_push.py` (pre-approved at user-global) instead of chaining
+`git add → commit → push`. The tool refuses secrets, directories, detached HEAD,
+and empty diffs — see `will/plugins/commit-push/skills/commit-push/SKILL.md`.
+
+**Edit/Write popups:** `permissions.defaultMode: "acceptEdits"` is set in user-global
+`~/.claude/settings.json`. Edits and writes don't prompt; review happens at commit time.
+
+**Tool naming:** Every repo uses `tools/` for executable code. No more `agent-tools/`.
 
 **Plugin install:** After adding or modifying a plugin in `will/plugins/`, run
 `bash plugins/install.sh` from the will repo root, then restart Claude Code.
@@ -80,3 +88,7 @@ Never `git add -A`. Never commit PDFs, `.venv/`, `egg-info/`, or `output/`.
 - [ ] `writing` and `vibedaw` don't have HANDOFF.md files yet — will be created on first `/reflect` in those repos. `money` and `health` already follow the modern pattern. (Reframed 2026-04-25 from earlier "modernize" item.)
 - [ ] Concept-skill pattern is likely cross-cutting. If money v2+ proves it out, the skill format + runtime should graduate to `will/plugins/` so health, writing, and others can adopt. Health in particular would benefit — same reactive-knowledge problem (lots of research docs, per-condition concepts, need to connect evidence to patient records) (from money session 2026-04-20)
 - [ ] Skill-as-knowledge-forwarding is a novel-ish pattern. Worth writing up as a system convention if concept-skills prove out — gives other repos a template for encapsulating and transferring domain knowledge rather than dumping raw docs (from money session 2026-04-20)
+- [ ] Cleanup: `will/agent-tools/test.json` (junk session-log dump) and the now-empty `will/agent-tools/` directory after the rename to `tools/`. Needs Chip's confirm before `rm -rf`. (from will session 2026-04-25)
+- [ ] Decide: should `will/problems/agent-scheduling.md` (Chip's 2026-04-22 architecture note, currently untracked) live in `will/problems/` (per CLAUDE.md convention) or move to `will-personal/problems/` (per PLAN.md older guidance). (from will session 2026-04-25)
+- [ ] Tool+skill pattern is now demonstrated by `commit_push.py` (full pair: tool + skill plugin) and `revert_ingest.py` (tool only, no skill yet). After a 3rd instance, write `will/system/tool-skill-pairs.md` documenting the lifecycle (identify → design → safety analysis → skill → register → dogfood). (from will session 2026-04-25)
+- [ ] Wrap `money/tools/revert_ingest.py` with a skill plugin so the agent discovers it via skill description, not just CLI knowledge. (from will session 2026-04-25)

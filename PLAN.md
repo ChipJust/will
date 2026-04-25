@@ -89,6 +89,16 @@ convention. Track here so promotion is deliberate.
   files in `hardware/machines/`, multi-step initiatives in
   `hardware/projects/`. Already in use; documented above as the canonical
   layout.
+- **Tool+skill pairs for popup-causing Bash actions** (from `will`, 2026-04-25).
+  Pattern: identify a recurring multi-step shell operation that causes a
+  popup chain → wrap it in a Python CLI with input validation that refuses
+  dangerous patterns → pre-approve the directory prefix in `settings.json`
+  → write a skill plugin telling the agent when to invoke. Edit/Write
+  popups are out of scope for this pattern (handled by
+  `permissions.defaultMode: "acceptEdits"` at user-global). Reference impls:
+  `will/tools/commit_push.py` (full pair: tool + skill plugin),
+  `money/tools/revert_ingest.py` (tool only, no skill yet). After a 3rd
+  instance, write up at `will/system/tool-skill-pairs.md`.
 
 ---
 
@@ -179,3 +189,4 @@ See `will-personal/problems/`. Current:
 | 2026-04-08 | Fix stale paths (will-personal refs); fix bootstrap description in ORIENTATION.md |
 | 2026-04-19 | Add three-tier Claude Code permission convention to System Conventions; deployed across all 7 active repos |
 | 2026-04-25 | Add Personal Layer + Cross-Repo Patterns sections; full permission convention writeup at `system/permissions.md`; "docs as inputs, graph as overlay" principle at `system/docs-as-inputs.md` |
+| 2026-04-25 | Standardize on `tools/` directory across all repos (rename `will/agent-tools/`); deploy `commit_push.py` + commit-push skill as first tool+skill pair; globalize `acceptEdits`; add `.gitattributes` to enforce LF; add tool+skill pattern to Cross-Repo Patterns |
