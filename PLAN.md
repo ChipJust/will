@@ -1,6 +1,6 @@
 # Will — System Architecture Plan
 
-*Last updated: 2026-04-19*
+*Last updated: 2026-04-25*
 
 This document defines the full multi-repo agent ecosystem Chip is building to manage
 life intentionally, with AI assistance across every major context.
@@ -46,6 +46,49 @@ a clearer public-facing identity is needed. At that point:
 - Let the private intent name remain as part of the internal architecture
 
 `vibedaw` is a precedent: branded name retained because it already has identity.
+
+---
+
+## Personal Layer (`will-personal`)
+
+`will-personal` is the private mirror of this repo. It holds content that
+would otherwise belong here but is too sensitive or too personal to commit
+publicly. Content categories:
+
+| Category | Path | What it holds |
+|----------|------|---------------|
+| Reflections | `reflections/YYYY-MM-DD-<repo>.md` | Per-session notes written by `/reflect` |
+| Problems | `problems/<topic>.md` | Logged issues blocking the system |
+| Hardware | `hardware/machines/<name>.md` | Per-machine spec, purchase, serial, history |
+| Hardware projects | `hardware/projects/<name>.md` | Multi-step hardware initiatives (refresh, migration) |
+| System | `system/hardware.md`, `system/<other>.md` | Machine spec snapshots and migration notes |
+| Config | `config.json` | Personal config (email, etc.) used by tooling |
+
+The wake-up routine (`/wake`) reads `will-personal/HANDOFF.md` as Layer 2 of
+its context stack so personal cross-cutting items reach every session.
+
+---
+
+## Cross-Repo Patterns Under Observation
+
+Patterns that have proven out in one repo and may graduate to a system-wide
+convention. Track here so promotion is deliberate.
+
+- **Data-intensive repos** (from `money`, 2026-04-19). The pattern is
+  `data/holdings/<account>.csv` plus a per-repo `predictions.csv` that
+  cross-references external research refs by slug. As more repos accumulate
+  structured data, this `data/` + tracking-CSV layout is a candidate for
+  formalization.
+- **Concept-skills** (from `money`, 2026-04-20). Single markdown files that
+  combine human-readable knowledge, tiered model prompts, and a graph-edge
+  linkage recipe. Pending v2 corpus-sweep proof; if it works, the format and
+  runtime should graduate to `will/plugins/` so other repos (especially
+  `health`) can adopt it. See `system/docs-as-inputs.md` for the
+  architectural principle this depends on.
+- **Hardware tracking** (from `will-personal`, 2026-04-12). Per-machine
+  files in `hardware/machines/`, multi-step initiatives in
+  `hardware/projects/`. Already in use; documented above as the canonical
+  layout.
 
 ---
 
@@ -122,12 +165,7 @@ See `will-personal/problems/`. Current:
 - **Research ingest:** `tools/ingest.py` → `research/refs/` (health repo pattern; portable to others)
 - **Memory:** `~/.claude/projects/<project>/memory/` — persists across sessions
 - **Skills:** `~/.claude/plugins/marketplaces/will-plugins/plugins/` (will repo skills)
-- **Claude Code permissions (three-tier):**
-  - `~/.claude/settings.json` — user-global `permissions.allow` for safe cross-repo commands
-  - `<repo>/.claude/settings.json` — committed, curated per-repo workflow allow list (Pattern B prefix wildcards)
-  - `<repo>/.claude/settings.local.json` — gitignored, organic personal overrides
-  - CLAUDE.md is NOT a permission surface — it's model context only. Enforcement lives in `settings.json` alone.
-  - Every repo's `.gitignore` uses the whitelist pattern: `.claude/*\n!.claude/settings.json`
+- **Claude Code permissions:** Three-tier — user-global, per-repo committed, per-repo local (gitignored). CLAUDE.md is not a permission surface; only `settings.json` is. Full writeup at `system/permissions.md`.
 
 ---
 
@@ -140,3 +178,4 @@ See `will-personal/problems/`. Current:
 | 2026-04-06 | Added hardware spec, bootstrap scripts, system conventions, AI hardware research |
 | 2026-04-08 | Fix stale paths (will-personal refs); fix bootstrap description in ORIENTATION.md |
 | 2026-04-19 | Add three-tier Claude Code permission convention to System Conventions; deployed across all 7 active repos |
+| 2026-04-25 | Add Personal Layer + Cross-Repo Patterns sections; full permission convention writeup at `system/permissions.md`; "docs as inputs, graph as overlay" principle at `system/docs-as-inputs.md` |

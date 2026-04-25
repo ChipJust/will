@@ -1,5 +1,5 @@
 # will — System Handoff
-*Last updated: 2026-04-12*
+*Last updated: 2026-04-25*
 
 This is the system-level context loaded by `/wake` before any subject-repo briefing.
 It re-establishes the architecture and cross-cutting state of the whole ecosystem.
@@ -77,11 +77,7 @@ Never `git add -A`. Never commit PDFs, `.venv/`, `egg-info/`, or `output/`.
 - [ ] Laptop purchase: 2× Lenovo Yoga 7a 2-in-1 Gen 11 — pending AMD Lenovo Affinity Store check (lenovo.com/us/vipmembers/amd/)
 - [ ] Bootstrap: test setup.sh end-to-end on a clean Linux machine
 - [ ] `giving`, `prayer`, `social-influence` repos: create when ready to start
-- [ ] Modernize HANDOFF.md in `money`, `writing`, `vibedaw` — strip cross-cutting sections (now in will-personal Layer 2); follow the health pattern from 2026-04-10
-- [ ] Add `hardware/` tracking pattern to will PLAN.md (new content category in will-personal, from 2026-04-12 session)
-- [ ] money repo is now the most data-intensive repo — PLAN.md should note the data/holdings + predictions.csv patterns as potentially reusable across repos (from money session 2026-04-19)
-- [ ] Decide where to document the Claude Code permission convention (candidates: cross-cutting section here in HANDOFF.md, or new will/system/permissions.md). Implementation deployed across all 7 repos 2026-04-19 — three-tier: user-global commands in `~/.claude/settings.json`, curated per-repo allow list in `<repo>/.claude/settings.json` (committed), organic entries in `<repo>/.claude/settings.local.json` (gitignored). Pattern B wildcards (`Bash(uv run python tools/:*)`) used for zero-maintenance tool pre-approval. CLAUDE.md is NOT the right place — settings.json is the only enforcement surface.
+- [ ] `writing` and `vibedaw` don't have HANDOFF.md files yet — will be created on first `/reflect` in those repos. `money` and `health` already follow the modern pattern. (Reframed 2026-04-25 from earlier "modernize" item.)
 - [ ] Consider promoting `defaultMode: "acceptEdits"` from health-only to user-global `~/.claude/settings.json` — aligns with "less popups safely" principle, but is a harness-level behavior change worth thinking through (from will session 2026-04-19)
 - [ ] Concept-skill pattern is likely cross-cutting. If money v2+ proves it out, the skill format + runtime should graduate to `will/plugins/` so health, writing, and others can adopt. Health in particular would benefit — same reactive-knowledge problem (lots of research docs, per-condition concepts, need to connect evidence to patient records) (from money session 2026-04-20)
-- [ ] "Docs as inputs, graph as overlay" is an architectural principle worth naming in `will/system/`. Applies anywhere we ingest third-party content and want to annotate without coupling our annotations to the source (from money session 2026-04-20)
 - [ ] Skill-as-knowledge-forwarding is a novel-ish pattern. Worth writing up as a system convention if concept-skills prove out — gives other repos a template for encapsulating and transferring domain knowledge rather than dumping raw docs (from money session 2026-04-20)
