@@ -10,6 +10,7 @@ from datetime import datetime
 from typing import Callable
 
 from agent_scheduling.protocol import Envelope, MessageType
+from agent_scheduling.solver import MeetingRequest
 
 
 @dataclass
@@ -32,6 +33,36 @@ class Negotiator:
             timestamp=self.clock(),
             message_type=MessageType.HELLO,
             body={"capabilities": list(self.capabilities)},
+        )
+
+    def batch_schedule(
+        self,
+        room_id: str,
+        negotiation_id: str,
+        meetings: list[MeetingRequest],
+        window_start: datetime,
+        window_end: datetime,
+    ) -> Envelope:
+        return Envelope(
+            room_id=room_id,
+            negotiation_id=negotiation_id,
+            sender_agent_id=self.agent_id,
+            sender_user_id=self.user_id,
+            sequence_no=self._next_seq(),
+            timestamp=self.clock(),
+            message_type=MessageType.BATCH_SCHEDULE,
+            body={
+                "meetings": [
+                    {
+                        "name": m.name,
+                        "participants": list(m.participants),
+                        "duration_minutes": m.duration_minutes,
+                    }
+                    for m in meetings
+                ],
+                "window_start": window_start.isoformat(),
+                "window_end": window_end.isoformat(),
+            },
         )
 
     def receive(self, envelope: Envelope) -> None:

@@ -90,3 +90,58 @@ def test_receive_ignores_messages_of_other_types_for_now():
     )
     alice.receive(propose)  # should not crash, no peer recorded for non-HELLO
     assert alice.peers == {}
+
+
+# Slice 11: BATCH_SCHEDULE emission
+
+
+def test_batch_schedule_emits_envelope_of_correct_type():
+    from agent_scheduling.solver import MeetingRequest
+    env = _alice().batch_schedule(
+        room_id="r",
+        negotiation_id="n",
+        meetings=[
+            MeetingRequest(
+                name="standup", participants=("u1", "u2"), duration_minutes=60
+            )
+        ],
+        window_start=_FIXED_TIME,
+        window_end=datetime(2026, 5, 1, 18, 0),
+    )
+    assert env.message_type == MessageType.BATCH_SCHEDULE
+
+
+def test_batch_schedule_carries_meetings_in_body():
+    from agent_scheduling.solver import MeetingRequest
+    meeting = MeetingRequest(
+        name="standup", participants=("u1", "u2"), duration_minutes=60
+    )
+    env = _alice().batch_schedule(
+        room_id="r",
+        negotiation_id="n",
+        meetings=[meeting],
+        window_start=_FIXED_TIME,
+        window_end=datetime(2026, 5, 1, 18, 0),
+    )
+    body = env.body
+    assert body["meetings"] == [
+        {"name": "standup", "participants": ["u1", "u2"], "duration_minutes": 60}
+    ]
+    assert body["window_start"] == _FIXED_TIME.isoformat()
+
+
+def test_batch_schedule_round_trips_through_json():
+    from agent_scheduling.solver import MeetingRequest
+    from agent_scheduling.protocol import Envelope as Env
+    meeting = MeetingRequest(
+        name="standup", participants=("u1", "u2"), duration_minutes=60
+    )
+    env = _alice().batch_schedule(
+        room_id="r",
+        negotiation_id="n",
+        meetings=[meeting],
+        window_start=_FIXED_TIME,
+        window_end=datetime(2026, 5, 1, 18, 0),
+    )
+    decoded = Env.from_json(env.to_json())
+    assert decoded == env
