@@ -9,7 +9,13 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Callable
 
-from agent_scheduling.adapters.base import Event, TimeWindow
+from agent_scheduling.adapters.base import (
+    EmailCalendarAdapter,
+    Event,
+    InviteResult,
+    MeetingInvite,
+    TimeWindow,
+)
 from agent_scheduling.privacy import PrivacyPolicyStore, apply_filter
 from agent_scheduling.protocol import Envelope, MessageType
 from agent_scheduling.solver import MeetingRequest, ProposedMeeting
@@ -63,6 +69,7 @@ class Negotiator:
     user_id: str
     capabilities: list[str] = field(default_factory=list)
     clock: Callable[[], datetime] = field(default=datetime.now)
+    adapters: dict[str, EmailCalendarAdapter] = field(default_factory=dict)
 
     _sequence_no: int = field(default=0, init=False)
     peers: dict[str, list[str]] = field(default_factory=dict, init=False)
@@ -70,6 +77,8 @@ class Negotiator:
     proposals_emitted: dict[str, list[ProposedMeeting]] = field(default_factory=dict, init=False)
     proposals_received: dict[str, list[ProposedMeeting]] = field(default_factory=dict, init=False)
     proposal_responses: dict[str, dict[str, str]] = field(default_factory=dict, init=False)
+    sent_invite_results: dict[str, list[InviteResult]] = field(default_factory=dict, init=False)
+    _invites_sent_for: set[str] = field(default_factory=set, init=False)
 
     def hello(self, room_id: str, negotiation_id: str) -> Envelope:
         return Envelope(
@@ -233,6 +242,42 @@ class Negotiator:
             )
         )
 
+    def confirm(
+        self, room_id: str, negotiation_id: str, proposal_id: str
+    ) -> Envelope:
+        """Emit CONFIRM and send invites for any meetings this negotiator owns."""
+        self._send_invites_for_owned_meetings(proposal_id)
+        return Envelope(
+            room_id=room_id,
+            negotiation_id=negotiation_id,
+            sender_agent_id=self.agent_id,
+            sender_user_id=self.user_id,
+            sequence_no=self._next_seq(),
+            timestamp=self.clock(),
+            message_type=MessageType.CONFIRM,
+            body={"proposal_id": proposal_id},
+        )
+
+    def _send_invites_for_owned_meetings(self, proposal_id: str) -> None:
+        if proposal_id in self._invites_sent_for:
+            return  # idempotent across confirm() and receive(CONFIRM)
+        meetings = self.proposals_emitted.get(proposal_id) or self.proposals_received.get(proposal_id) or []
+        for meeting in meetings:
+            if meeting.source_user_id != self.user_id:
+                continue
+            adapter = self.adapters.get(meeting.source_adapter_id)
+            if adapter is None:
+                continue
+            invite = MeetingInvite(
+                title=meeting.meeting_name,
+                start=meeting.start,
+                end=meeting.end,
+                attendees=meeting.participants,
+            )
+            result = adapter.send_invite(invite)
+            self.sent_invite_results.setdefault(proposal_id, []).append(result)
+        self._invites_sent_for.add(proposal_id)
+
     def receive(self, envelope: Envelope) -> None:
         if envelope.message_type == MessageType.HELLO:
             self.peers[envelope.sender_agent_id] = list(
@@ -257,6 +302,10 @@ class Negotiator:
             self.proposal_responses.setdefault(proposal_id, {})[
                 envelope.sender_agent_id
             ] = envelope.message_type.value
+        elif envelope.message_type == MessageType.CONFIRM:
+            proposal_id = envelope.body.get("proposal_id")
+            if proposal_id:
+                self._send_invites_for_owned_meetings(proposal_id)
 
     def _next_seq(self) -> int:
         seq = self._sequence_no

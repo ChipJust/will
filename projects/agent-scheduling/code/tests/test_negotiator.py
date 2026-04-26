@@ -379,3 +379,94 @@ def test_end_to_end_two_agents_reach_unanimous_accept():
     assert alice.has_unanimous_accept(
         "prop-cohort", expected_responders={"agent-bob"}
     )
+
+
+# Slice 16: CONFIRM triggers send_invite for owned meetings
+
+
+def _alice_with_adapter():
+    from agent_scheduling.adapters import MockAdapter
+    adapter = MockAdapter(send_address="alice@example.com")
+    alice = Negotiator(
+        agent_id="agent-alice",
+        user_id="user-alice",
+        capabilities=["BATCH_SCHEDULE"],
+        clock=lambda: _FIXED_TIME,
+        adapters={"adapter-alice-gmail": adapter},
+    )
+    return alice, adapter
+
+
+def _bob_with_adapter():
+    from agent_scheduling.adapters import MockAdapter
+    adapter = MockAdapter(send_address="bob@example.com")
+    bob = Negotiator(
+        agent_id="agent-bob",
+        user_id="user-bob",
+        capabilities=["BATCH_SCHEDULE"],
+        clock=lambda: _FIXED_TIME,
+        adapters={"adapter-bob-gmail": adapter},
+    )
+    return bob, adapter
+
+
+def test_confirm_emits_envelope_with_proposal_id():
+    alice, _ = _alice_with_adapter()
+    env = alice.confirm("r", "n", "prop-1")
+    assert env.message_type == MessageType.CONFIRM
+    assert env.body["proposal_id"] == "prop-1"
+
+
+def test_confirm_triggers_send_invite_for_owned_meeting():
+    alice, alice_adapter = _alice_with_adapter()
+    alice.propose("r", "n", "prop-1", [_proposed("cohort")])  # alice owns this
+    alice.confirm("r", "n", "prop-1")
+    assert len(alice_adapter.sent_invites) == 1
+    assert alice_adapter.sent_invites[0].title == "cohort"
+
+
+def test_confirm_does_not_send_for_meetings_owned_by_other_users():
+    alice, alice_adapter = _alice_with_adapter()
+    bob_owned = ProposedMeeting(
+        meeting_name="bob-meeting",
+        start=datetime(2026, 5, 1, 9, 0),
+        end=datetime(2026, 5, 1, 10, 0),
+        participants=("u1", "u2"),
+        source_user_id="user-bob",
+        source_adapter_id="adapter-bob-gmail",
+    )
+    alice.propose("r", "n", "prop-1", [bob_owned])
+    alice.confirm("r", "n", "prop-1")
+    assert alice_adapter.sent_invites == []
+
+
+def test_confirm_is_idempotent():
+    alice, alice_adapter = _alice_with_adapter()
+    alice.propose("r", "n", "prop-1", [_proposed("cohort")])
+    alice.confirm("r", "n", "prop-1")
+    alice.confirm("r", "n", "prop-1")  # second confirm should not double-send
+    assert len(alice_adapter.sent_invites) == 1
+
+
+def test_receive_confirm_triggers_send_invite():
+    alice, alice_adapter = _alice_with_adapter()
+    bob, _ = _bob_with_adapter()
+    # alice is the proposal source (alice owns the meeting); bob receives the proposal
+    alice_propose = alice.propose("r", "n", "prop-1", [_proposed("cohort")])
+    bob.receive(alice_propose)
+    # bob emits CONFIRM; alice receives it and sends invite for her owned meeting
+    bob_confirm = bob.confirm("r", "n", "prop-1")
+    alice.receive(bob_confirm)
+    assert len(alice_adapter.sent_invites) == 1
+
+
+def test_invite_results_recorded_per_proposal():
+    alice, _ = _alice_with_adapter()
+    alice.propose("r", "n", "prop-1", [_proposed("m1"), _proposed("m2")])
+    alice.confirm("r", "n", "prop-1")
+    assert len(alice.sent_invite_results["prop-1"]) == 2
+    assert all(r.success for r in alice.sent_invite_results["prop-1"])
+
+
+# Required for ProposedMeeting reference in tests above
+from agent_scheduling.solver import ProposedMeeting
