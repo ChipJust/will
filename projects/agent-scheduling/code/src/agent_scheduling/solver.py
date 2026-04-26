@@ -1,12 +1,14 @@
 """Constraint-satisfaction solver for batch scheduling.
 
-Single-meeting scheduling (slice 11) and multi-meeting batches with overlapping
-participants (slice 13). Algorithm: candidate generation per meeting + backtracking
+Single-meeting scheduling (slice 11), multi-meeting batches with overlapping
+participants (slice 13), source-adapter assignment (slice 14), deadlock
+analysis (slice 17). Algorithm: candidate generation per meeting + backtracking
 with shared-participant conflict checking. Tractable for cohort-scale batches.
 """
 from __future__ import annotations
 
 import itertools
+from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
@@ -162,3 +164,62 @@ def solve(
     if _backtrack(candidates_per_meeting, assignment, 0):
         return assignment
     return None
+
+
+def analyze_deadlock(
+    meetings: list[MeetingRequest],
+    free_busy: dict[str, list[Event]],
+    window: TimeWindow,
+    granularity_minutes: int = 30,
+) -> list[str]:
+    """Identify the most-binding users when scheduling is infeasible.
+
+    Returns [] if scheduling is actually feasible. Otherwise, ranks users by
+    how many candidate slots their busy events block, summed across the meetings
+    they participate in. For backtracking-exhaustion cases where every meeting
+    has candidates but no combination fits, falls back to ranking by participation
+    in the most-constrained meetings.
+    """
+    if solve(meetings, free_busy, window, granularity_minutes) is not None:
+        return []
+
+    block_score: dict[str, int] = defaultdict(int)
+
+    for meeting in meetings:
+        # Count slots each participant blocks for this specific meeting.
+        duration = timedelta(minutes=meeting.duration_minutes)
+        step = timedelta(minutes=granularity_minutes)
+        current = window.start
+        slot_count = 0
+        viable = 0
+        while current + duration <= window.end:
+            slot_end = current + duration
+            slot_count += 1
+            blockers_here = [
+                p
+                for p in meeting.participants
+                if _conflicts(current, slot_end, free_busy.get(p, []))
+            ]
+            if not blockers_here:
+                viable += 1
+            else:
+                for p in blockers_here:
+                    block_score[p] += 1
+            current += step
+        # If the meeting is impossible (zero viable slots), bump every participant
+        # so they all surface as binders even when no one was strictly worse.
+        if slot_count > 0 and viable == 0:
+            for p in meeting.participants:
+                block_score[p] += 1
+
+    if not block_score:
+        # Backtracking exhaustion fallback: highlight users in the most meetings.
+        meeting_counts: dict[str, int] = defaultdict(int)
+        for meeting in meetings:
+            for p in meeting.participants:
+                meeting_counts[p] += 1
+        ranked = sorted(meeting_counts.items(), key=lambda kv: -kv[1])
+        return [u for u, c in ranked if c > 0]
+
+    ranked = sorted(block_score.items(), key=lambda kv: -kv[1])
+    return [u for u, c in ranked if c > 0]

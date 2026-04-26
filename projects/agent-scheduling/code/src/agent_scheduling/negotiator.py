@@ -242,6 +242,29 @@ class Negotiator:
             )
         )
 
+    def deadlock_ask(
+        self,
+        room_id: str,
+        negotiation_id: str,
+        proposal_id: str,
+        binding_users: list[str],
+        suggestion: str = "",
+    ) -> Envelope:
+        return Envelope(
+            room_id=room_id,
+            negotiation_id=negotiation_id,
+            sender_agent_id=self.agent_id,
+            sender_user_id=self.user_id,
+            sequence_no=self._next_seq(),
+            timestamp=self.clock(),
+            message_type=MessageType.DEADLOCK_ASK,
+            body={
+                "proposal_id": proposal_id,
+                "binding_users": list(binding_users),
+                "suggestion": suggestion,
+            },
+        )
+
     def confirm(
         self, room_id: str, negotiation_id: str, proposal_id: str
     ) -> Envelope:

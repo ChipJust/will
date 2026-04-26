@@ -266,3 +266,43 @@ def test_proposed_meeting_preserves_slot_data():
     assert proposed.start == _dt(9)
     assert proposed.end == _dt(10)
     assert proposed.participants == ("u1", "u2")
+
+
+# Slice 17: deadlock analysis
+
+
+def test_analyze_deadlock_identifies_user_with_full_calendar():
+    """If u1 is busy all day, u1 is clearly the binder."""
+    from agent_scheduling.solver import analyze_deadlock
+    all_day = Event(title="busy", start=_dt(8), end=_dt(18))
+    meeting = MeetingRequest(name="m1", participants=("u1", "u2"), duration_minutes=60)
+    binders = analyze_deadlock(
+        [meeting], free_busy={"u1": [all_day], "u2": []}, window=_WINDOW
+    )
+    assert binders[0] == "u1"
+
+
+def test_analyze_deadlock_returns_empty_when_everyone_is_free():
+    """No deadlock at all, but the function should still be safe to call."""
+    from agent_scheduling.solver import analyze_deadlock
+    meeting = MeetingRequest(name="m1", participants=("u1", "u2"), duration_minutes=60)
+    binders = analyze_deadlock(
+        [meeting], free_busy={"u1": [], "u2": []}, window=_WINDOW
+    )
+    assert binders == []
+
+
+def test_analyze_deadlock_ranks_by_blocking_count():
+    """When deadlocked, the user who blocks more slots ranks higher."""
+    from agent_scheduling.solver import analyze_deadlock
+    # u2 fully blocked → no slot is viable for the meeting (deadlock).
+    # u1 has only one minor block; u2 blocks every slot.
+    minor = Event(title="minor", start=_dt(8), end=_dt(9))
+    all_day = Event(title="major", start=_dt(8), end=_dt(18))
+    meeting = MeetingRequest(name="m1", participants=("u1", "u2"), duration_minutes=60)
+    binders = analyze_deadlock(
+        [meeting],
+        free_busy={"u1": [minor], "u2": [all_day]},
+        window=_WINDOW,
+    )
+    assert binders[0] == "u2"

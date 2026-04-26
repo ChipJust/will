@@ -470,3 +470,27 @@ def test_invite_results_recorded_per_proposal():
 
 # Required for ProposedMeeting reference in tests above
 from agent_scheduling.solver import ProposedMeeting
+
+
+# Slice 17: DEADLOCK_ASK emission
+
+
+def test_deadlock_ask_emits_envelope():
+    env = _alice().deadlock_ask(
+        room_id="r",
+        negotiation_id="n",
+        proposal_id="prop-1",
+        binding_users=["user-bob", "user-carol"],
+        suggestion="could you skip meeting m3 next month?",
+    )
+    assert env.message_type == MessageType.DEADLOCK_ASK
+    assert env.body["binding_users"] == ["user-bob", "user-carol"]
+    assert env.body["suggestion"] == "could you skip meeting m3 next month?"
+
+
+def test_deadlock_ask_round_trips_through_json():
+    from agent_scheduling.protocol import Envelope as Env
+    env = _alice().deadlock_ask(
+        "r", "n", "prop-1", binding_users=["user-bob"], suggestion="?"
+    )
+    assert Env.from_json(env.to_json()) == env
