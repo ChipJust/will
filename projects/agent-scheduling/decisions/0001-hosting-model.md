@@ -1,26 +1,28 @@
-# 0001. Hosting model — centralized vs. federated
+# 0001. Hosting model — multi-tenant cloud
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-04-26
 
 ## Context
 
-The chat server, agent runtime, and PWA client need to live somewhere. Two main shapes:
-
-- **Centralized.** One server hosts the chat rooms and (optionally) all agent processes. Cohort members join as clients.
-- **Federated.** Each user runs their own agent (and possibly their own server). Rooms are pub/sub topics shared across servers.
-
-Forces:
-- The cohort is 7 people; centralized is operationally simplest.
-- Federated reduces server-side trust burden (calendar tokens, message contents) and aligns with the "privacy by default" non-functional requirement.
-- Mobile-first UX makes self-hosting per user impractical without a managed option.
-- Cost: a single small VPS handles 7 users centrally; federated multiplies that, though the per-user agent could run on the user's own laptop intermittently.
-- Any future "wider than this cohort" scope (still an open requirements question) tilts toward federated; cohort-only tilts toward centralized.
+Scope was originally framed as cohort-only. Resolved 2026-04-26: this is the **first of multiple** use cases (cohort, marriage, work circle, etc.). Onboarding non-technical users (e.g., Chip's wife) must be effectively zero-ceremony — she "glazed over really fast" when walked through a self-hosted setup. Group membership data needs central storage so members can be hooked up via simple invites. Federated/self-hosted operation may revisit later, but does not fit the onboarding bar today.
 
 ## Decision
 
-*TBD — pending requirements close-out on auth, privacy granularity, and per-user trust assumptions.*
+**Multi-tenant cloud hosting.** The platform hosts:
+- User accounts and identities (OAuth-bound).
+- Groups, group memberships, privacy policies.
+- Per-user agent runtimes.
+- Chat-server persistence for negotiation rooms.
+- Per-user OAuth refresh tokens for email/calendar APIs (encrypted at rest).
+
+User calendar and email data live in their existing apps and are accessed via API; we never duplicate that data server-side beyond what's needed for an in-flight negotiation.
 
 ## Consequences
 
-*TBD.*
+- Onboarding: invite-link → OAuth → in. One sign-in covers all groups a user belongs to.
+- Server-side trust is heightened — we hold OAuth refresh tokens and chat content. Encrypt at rest; declare retention; treat E2E for chat as a v2 question.
+- Data model: every record carries `group_id` scoping.
+- Cost: a small VPS handles the prototype-and-cohort scale; scale linearly.
+- Federation/self-hosting deferred. Revisit if usage demands it.
+- Sets the stage for separating `will` (Chip's meta-agent) from the deployed application repo when this graduates.
