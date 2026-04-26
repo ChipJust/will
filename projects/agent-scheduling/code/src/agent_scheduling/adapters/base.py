@@ -1,7 +1,4 @@
-"""Adapter Protocol + shared value types.
-
-The Protocol grows as slices drive out additional methods.
-"""
+"""Adapter Protocol + shared value types."""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -41,6 +38,14 @@ class InviteResult:
     error: str | None = None
 
 
+@dataclass(frozen=True)
+class AdapterHealth:
+    ok: bool
+    error: str | None = None
+
+
 class EmailCalendarAdapter(Protocol):
     def list_calendar_events(self, window: TimeWindow) -> list[Event]: ...
     def send_invite(self, invite: MeetingInvite) -> InviteResult: ...
+    def get_send_address(self) -> str: ...
+    def health(self) -> AdapterHealth: ...

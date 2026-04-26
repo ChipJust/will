@@ -5,6 +5,7 @@ meeting. First implementation: MockAdapter for tests; real Google adapter
 follows in a later slice.
 """
 from agent_scheduling.adapters.base import (
+    AdapterHealth,
     EmailCalendarAdapter,
     Event,
     InviteResult,
@@ -14,6 +15,7 @@ from agent_scheduling.adapters.base import (
 from agent_scheduling.adapters.mock import MockAdapter
 
 __all__ = [
+    "AdapterHealth",
     "EmailCalendarAdapter",
     "Event",
     "InviteResult",

@@ -99,3 +99,39 @@ def test_sent_invites_returns_copy():
     snapshot = adapter.sent_invites
     snapshot.clear()
     assert len(adapter.sent_invites) == 1
+
+
+# Slice 5: get_send_address + health
+
+
+def test_get_send_address_returns_configured_address():
+    adapter = MockAdapter(send_address="alice@example.com")
+    assert adapter.get_send_address() == "alice@example.com"
+
+
+def test_get_send_address_default():
+    adapter = MockAdapter()
+    assert adapter.get_send_address() == "mock@example.com"
+
+
+def test_health_reports_ok_by_default():
+    adapter = MockAdapter()
+    assert adapter.health().ok is True
+
+
+def test_health_can_simulate_unhealthy_state():
+    adapter = MockAdapter(healthy=False, health_error="auth expired")
+    health = adapter.health()
+    assert health.ok is False
+    assert health.error == "auth expired"
+
+
+def test_mock_adapter_satisfies_protocol():
+    """Static type-check: MockAdapter is a structural EmailCalendarAdapter."""
+    from agent_scheduling.adapters import EmailCalendarAdapter
+    adapter: EmailCalendarAdapter = MockAdapter()
+    # Just exercising each method confirms the Protocol surface is filled.
+    adapter.list_calendar_events(TimeWindow(start=_dt(0), end=_dt(23)))
+    adapter.send_invite(_invite())
+    adapter.get_send_address()
+    adapter.health()
