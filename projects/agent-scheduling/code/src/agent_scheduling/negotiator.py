@@ -78,6 +78,7 @@ class Negotiator:
     proposals_received: dict[str, list[ProposedMeeting]] = field(default_factory=dict, init=False)
     proposal_responses: dict[str, dict[str, str]] = field(default_factory=dict, init=False)
     sent_invite_results: dict[str, list[InviteResult]] = field(default_factory=dict, init=False)
+    relaxations_received: dict[str, list[dict]] = field(default_factory=dict, init=False)
     _invites_sent_for: set[str] = field(default_factory=set, init=False)
 
     def hello(self, room_id: str, negotiation_id: str) -> Envelope:
@@ -242,6 +243,29 @@ class Negotiator:
             )
         )
 
+    def deadlock_relax(
+        self,
+        room_id: str,
+        negotiation_id: str,
+        proposal_id: str,
+        relaxation_kind: str,
+        details: dict,
+    ) -> Envelope:
+        return Envelope(
+            room_id=room_id,
+            negotiation_id=negotiation_id,
+            sender_agent_id=self.agent_id,
+            sender_user_id=self.user_id,
+            sequence_no=self._next_seq(),
+            timestamp=self.clock(),
+            message_type=MessageType.DEADLOCK_RELAX,
+            body={
+                "proposal_id": proposal_id,
+                "relaxation_kind": relaxation_kind,
+                "details": details,
+            },
+        )
+
     def deadlock_ask(
         self,
         room_id: str,
@@ -329,6 +353,16 @@ class Negotiator:
             proposal_id = envelope.body.get("proposal_id")
             if proposal_id:
                 self._send_invites_for_owned_meetings(proposal_id)
+        elif envelope.message_type == MessageType.DEADLOCK_RELAX:
+            proposal_id = envelope.body.get("proposal_id")
+            if proposal_id:
+                self.relaxations_received.setdefault(proposal_id, []).append(
+                    {
+                        "kind": envelope.body.get("relaxation_kind"),
+                        "details": envelope.body.get("details", {}),
+                        "user_id": envelope.sender_user_id,
+                    }
+                )
 
     def _next_seq(self) -> int:
         seq = self._sequence_no

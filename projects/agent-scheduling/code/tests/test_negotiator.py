@@ -494,3 +494,39 @@ def test_deadlock_ask_round_trips_through_json():
         "r", "n", "prop-1", binding_users=["user-bob"], suggestion="?"
     )
     assert Env.from_json(env.to_json()) == env
+
+
+# Slice 18: DEADLOCK_RELAX message
+
+
+def test_deadlock_relax_emits_envelope_of_correct_type():
+    env = _alice().deadlock_relax(
+        room_id="r",
+        negotiation_id="n",
+        proposal_id="prop-1",
+        relaxation_kind="drop_meeting",
+        details={"meeting_name": "m2"},
+    )
+    assert env.message_type == MessageType.DEADLOCK_RELAX
+    assert env.body["relaxation_kind"] == "drop_meeting"
+    assert env.body["details"]["meeting_name"] == "m2"
+
+
+def test_receive_deadlock_relax_records_relaxation():
+    alice = _alice()
+    bob_relax = _bob().deadlock_relax(
+        "r", "n", "prop-1", "drop_meeting", {"meeting_name": "m2"}
+    )
+    alice.receive(bob_relax)
+    relaxations = alice.relaxations_received["prop-1"]
+    assert len(relaxations) == 1
+    assert relaxations[0]["kind"] == "drop_meeting"
+    assert relaxations[0]["user_id"] == "user-bob"
+
+
+def test_deadlock_relax_round_trips_through_json():
+    from agent_scheduling.protocol import Envelope as Env
+    env = _alice().deadlock_relax(
+        "r", "n", "prop-1", "drop_meeting", {"meeting_name": "m2"}
+    )
+    assert Env.from_json(env.to_json()) == env

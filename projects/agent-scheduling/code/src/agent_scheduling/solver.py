@@ -223,3 +223,25 @@ def analyze_deadlock(
 
     ranked = sorted(block_score.items(), key=lambda kv: -kv[1])
     return [u for u, c in ranked if c > 0]
+
+
+def apply_relaxations(
+    meetings: list[MeetingRequest],
+    relaxations: list[dict],
+) -> list[MeetingRequest]:
+    """Apply user-supplied relaxations to the meeting list (slice 18).
+
+    Supported kinds at this slice:
+      - drop_meeting: removes the named meeting from the batch.
+    Unknown kinds are passed through unchanged so the system stays forward-
+    compatible as new relaxation kinds land in later slices.
+    """
+    result = list(meetings)
+    for relaxation in relaxations:
+        kind = relaxation.get("kind")
+        details = relaxation.get("details", {})
+        if kind == "drop_meeting":
+            target = details.get("meeting_name")
+            if target is not None:
+                result = [m for m in result if m.name != target]
+    return result

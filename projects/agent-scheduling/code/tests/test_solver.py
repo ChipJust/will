@@ -292,6 +292,60 @@ def test_analyze_deadlock_returns_empty_when_everyone_is_free():
     assert binders == []
 
 
+# Slice 18: relaxations
+
+
+def test_apply_relaxations_drops_named_meeting():
+    from agent_scheduling.solver import apply_relaxations
+    m1 = MeetingRequest(name="m1", participants=("u1",), duration_minutes=60)
+    m2 = MeetingRequest(name="m2", participants=("u1",), duration_minutes=60)
+    relaxed = apply_relaxations(
+        [m1, m2],
+        [{"kind": "drop_meeting", "details": {"meeting_name": "m1"}}],
+    )
+    assert relaxed == [m2]
+
+
+def test_apply_relaxations_no_op_when_meeting_not_found():
+    from agent_scheduling.solver import apply_relaxations
+    m1 = MeetingRequest(name="m1", participants=("u1",), duration_minutes=60)
+    relaxed = apply_relaxations(
+        [m1], [{"kind": "drop_meeting", "details": {"meeting_name": "ghost"}}]
+    )
+    assert relaxed == [m1]
+
+
+def test_apply_relaxations_unknown_kind_is_passthrough():
+    from agent_scheduling.solver import apply_relaxations
+    m1 = MeetingRequest(name="m1", participants=("u1",), duration_minutes=60)
+    relaxed = apply_relaxations(
+        [m1], [{"kind": "future_kind_we_do_not_know_yet", "details": {}}]
+    )
+    assert relaxed == [m1]
+
+
+def test_resolve_after_drop_meeting_succeeds_when_originally_infeasible():
+    """End-to-end: deadlock -> drop a meeting -> re-solve succeeds."""
+    from agent_scheduling.solver import apply_relaxations
+    blocker = Event(title="busy", start=_dt(8), end=_dt(18))
+    m1 = MeetingRequest(name="m1", participants=("u1", "u2"), duration_minutes=60)
+    m2 = MeetingRequest(name="m2", participants=("u1", "u2"), duration_minutes=60)
+
+    free_busy = {"u1": [], "u2": [blocker]}  # u2 blocked all day
+    assert solve([m1, m2], free_busy, _WINDOW) is None
+
+    # User u2 says: drop m2.
+    relaxed = apply_relaxations(
+        [m1, m2], [{"kind": "drop_meeting", "details": {"meeting_name": "m2"}}]
+    )
+    # Now m1 is the only meeting, but u2 is still fully blocked. Still infeasible.
+    assert solve(relaxed, free_busy, _WINDOW) is None
+
+    # Try a different relaxation: free up u2.
+    free_busy_relaxed = {"u1": [], "u2": []}
+    assert solve(relaxed, free_busy_relaxed, _WINDOW) is not None
+
+
 def test_analyze_deadlock_ranks_by_blocking_count():
     """When deadlocked, the user who blocks more slots ranks higher."""
     from agent_scheduling.solver import analyze_deadlock
