@@ -3,7 +3,10 @@ name = "agent-scheduling"
 version = "0.1.0"
 description = "Cohort scheduling via agent-to-agent negotiation. First of a multi-context group platform."
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "fastapi>=0.136.1",
+    "httpx>=0.28.1",
+]
 
 [dependency-groups]
 dev = ["pytest>=8.0"]
