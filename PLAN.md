@@ -1,6 +1,6 @@
 # Will — System Architecture Plan
 
-*Last updated: 2026-04-25*
+*Last updated: 2026-04-26*
 
 This document defines the full multi-repo agent ecosystem Chip is building to manage
 life intentionally, with AI assistance across every major context.
@@ -66,6 +66,38 @@ publicly. Content categories:
 
 The wake-up routine (`/wake`) reads `will-personal/HANDOFF.md` as Layer 2 of
 its context stack so personal cross-cutting items reach every session.
+
+---
+
+## Projects (`projects/`)
+
+Software projects developed in `will` live under `projects/<name>/` and follow
+a 5-phase lifecycle, captured as a per-project directory with one file per phase:
+
+| Phase | File | Output |
+|-------|------|--------|
+| 01 | `01-research.md` | Prior art, constraints, open variables |
+| 02 | `02-requirements.md` | Users, behavior list, success criteria, non-goals |
+| 03 | `03-specification.md` | Externally observable behavior (surface, data model, invariants) |
+| 04 | `04-design.md` | Architecture + ADRs in `decisions/` |
+| 05 | `05-implementation.md` | TDD log against the spec |
+
+Each phase file is **dual-purpose**: a durable prompt section (copied from
+`projects/_template/`) and a saved-response section that the agent fills in.
+`STATUS.md` is the per-project tracker that `/wake` reads on entry.
+
+Architecture decisions are recorded as ADRs (Nygard format) in
+`projects/<name>/decisions/`, one file per decision. Format and lifecycle rules
+are documented at `projects/_template/decisions/README.md`.
+
+`projects/` is the collaborator-facing surface of `will`. Anything personal —
+names, machine specs, private data, operational issues — belongs in
+`will-personal/` instead. The first project under this template is
+`projects/agent-scheduling/`, migrated from the prior outlier
+`will/problems/agent-scheduling.md` on 2026-04-26.
+
+The template is a **maximum, not a minimum.** Small projects can skip phases
+that don't add value — leave a one-line note in the saved response saying why.
 
 ---
 
@@ -190,3 +222,4 @@ See `will-personal/problems/`. Current:
 | 2026-04-19 | Add three-tier Claude Code permission convention to System Conventions; deployed across all 7 active repos |
 | 2026-04-25 | Add Personal Layer + Cross-Repo Patterns sections; full permission convention writeup at `system/permissions.md`; "docs as inputs, graph as overlay" principle at `system/docs-as-inputs.md` |
 | 2026-04-25 | Standardize on `tools/` directory across all repos (rename `will/agent-tools/`); deploy `commit_push.py` + commit-push skill as first tool+skill pair; globalize `acceptEdits`; add `.gitattributes` to enforce LF; add tool+skill pattern to Cross-Repo Patterns |
+| 2026-04-26 | Add `projects/` directory + 5-phase template (research → requirements → spec → design → implementation with TDD) and `decisions/` ADR convention. Migrate the `agent-scheduling` outlier from `will/problems/` into `projects/agent-scheduling/`; remove the now-empty `will/problems/` directory (personal/ops problems already canonically live in `will-personal/problems/`) |

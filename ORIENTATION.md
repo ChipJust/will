@@ -47,6 +47,17 @@ after Claude Code is installed.
 Canonical source for system-wide rules: branch naming, package manager (uv), commit
 style, encoding requirements, etc. Any new convention goes here first.
 
+### Projects (`projects/`)
+
+Software projects developed in `will`. Each lives in its own directory under
+`projects/<name>/` and follows a 5-phase lifecycle: research → requirements →
+specification → design → implementation (TDD). The canonical template is at
+`projects/_template/`. The `STATUS.md` file in each project is the front-page
+tracker — `/wake` reads it when entering a project.
+
+Project artifacts here are collaborator-facing. Personal/operational issues
+(machine-specific problems, etc.) live in `will-personal/problems/` instead.
+
 ### PLAN.md
 
 Master architecture. Source of truth for the repo ecosystem. Keep it current.
@@ -59,7 +70,7 @@ Master architecture. Source of truth for the repo ecosystem. Keep it current.
 |------------------|---------------|
 | Public | Private |
 | Framework | Personal instance |
-| Plugins, bootstrap, conventions | Config, reflections, problems, hardware |
+| Plugins, bootstrap, conventions, projects | Config, reflections, problems, hardware |
 | Anyone can fork | Never shared |
 
 Bootstrap discovers will-personal from GitHub auth (`gh api user`), clones it,

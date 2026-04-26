@@ -1,5 +1,5 @@
 # will — System Handoff
-*Last updated: 2026-04-25*
+*Last updated: 2026-04-26*
 
 This is the system-level context loaded by `/wake` before any subject-repo briefing.
 It re-establishes the architecture and cross-cutting state of the whole ecosystem.
@@ -89,6 +89,7 @@ and empty diffs — see `will/plugins/commit-push/skills/commit-push/SKILL.md`.
 - [ ] Concept-skill pattern is likely cross-cutting. If money v2+ proves it out, the skill format + runtime should graduate to `will/plugins/` so health, writing, and others can adopt. Health in particular would benefit — same reactive-knowledge problem (lots of research docs, per-condition concepts, need to connect evidence to patient records) (from money session 2026-04-20)
 - [ ] Skill-as-knowledge-forwarding is a novel-ish pattern. Worth writing up as a system convention if concept-skills prove out — gives other repos a template for encapsulating and transferring domain knowledge rather than dumping raw docs (from money session 2026-04-20)
 - [ ] Cleanup: `will/agent-tools/test.json` (junk session-log dump) and the now-empty `will/agent-tools/` directory after the rename to `tools/`. Needs Chip's confirm before `rm -rf`. (from will session 2026-04-25)
-- [ ] Decide: should `will/problems/agent-scheduling.md` (Chip's 2026-04-22 architecture note, currently untracked) live in `will/problems/` (per CLAUDE.md convention) or move to `will-personal/problems/` (per PLAN.md older guidance). (from will session 2026-04-25)
 - [ ] Tool+skill pattern is now demonstrated by `commit_push.py` (full pair: tool + skill plugin) and `revert_ingest.py` (tool only, no skill yet). After a 3rd instance, write `will/system/tool-skill-pairs.md` documenting the lifecycle (identify → design → safety analysis → skill → register → dogfood). (from will session 2026-04-25)
 - [ ] Wrap `money/tools/revert_ingest.py` with a skill plugin so the agent discovers it via skill description, not just CLI knowledge. (from will session 2026-04-25)
+- [ ] Once 2 more projects use the `projects/_template/` layout, evaluate whether to wrap it in a `/project` skill (dispatches by phase from `STATUS.md`) or leave it as files-only. Per rule of 3. (from will session 2026-04-26)
+- [ ] `agent-scheduling` project is at phase 02 with substantial open requirements questions. Resolve those before treating the drafted spec/design as load-bearing. See `projects/agent-scheduling/02-requirements.md` open questions and `projects/agent-scheduling/decisions/0001-hosting-model.md`. (from will session 2026-04-26)

@@ -24,9 +24,11 @@ agent that manages all of them. It holds:
 ## Key files
 
 - `PLAN.md` — master architecture; start here
+- `projects/` — software projects developed in `will`; each has a 5-phase template (research → requirements → spec → design → implementation)
 - `reflections/` — dated session notes; run `/reflect` at the end of every session
-- `problems/` — logged issues blocking the system
 - `system/` — repo ecosystem definition and conventions
+
+Personal/operational issues (windows-hardware, etc.) live in `will-personal/problems/`, not here. `projects/` is the public, collaborator-facing surface for software work.
 
 ## Session start (wake-up routine)
 
@@ -41,7 +43,7 @@ Or just run `/wake` and it handles all of this.
 
 - Branch: `main`
 - Use `/reflect` at the end of any session (in any repo) to write a reflection here
-- When you solve a problem in `problems/`, mark it resolved with date and close notes
+- New software project? Start with `cp -r projects/_template/ projects/<name>/` and walk through the phase files. The template is a maximum, not a minimum — skip phases that don't add value, leaving a one-line note in the saved response saying why.
 - Keep PLAN.md current — it is the source of truth for what the system is and where it's going
 
 ## Tools
@@ -64,4 +66,5 @@ its own per-repo scripts; the convention is consistent.
 ## Conventions
 
 - Reflections are named `YYYY-MM-DD-<repo>.md` (e.g. `2026-04-06-health.md`)
-- Problems are named by topic (e.g. `windows-hardware.md`)
+- Projects are named by topic, kebab-case (e.g. `agent-scheduling/`); each follows the 5-phase template at `projects/_template/`
+- Problems (personal/operational) are named by topic and live in `will-personal/problems/` (e.g. `windows-hardware.md`)
