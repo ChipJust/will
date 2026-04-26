@@ -12,7 +12,7 @@ from typing import Callable
 from agent_scheduling.adapters.base import Event, TimeWindow
 from agent_scheduling.privacy import PrivacyPolicyStore, apply_filter
 from agent_scheduling.protocol import Envelope, MessageType
-from agent_scheduling.solver import MeetingRequest
+from agent_scheduling.solver import MeetingRequest, ProposedMeeting
 
 
 def _event_to_dict(event: Event) -> dict:
@@ -35,6 +35,28 @@ def _event_from_dict(data: dict) -> Event:
     )
 
 
+def _proposed_meeting_to_dict(meeting: ProposedMeeting) -> dict:
+    return {
+        "meeting_name": meeting.meeting_name,
+        "start": meeting.start.isoformat(),
+        "end": meeting.end.isoformat(),
+        "participants": list(meeting.participants),
+        "source_user_id": meeting.source_user_id,
+        "source_adapter_id": meeting.source_adapter_id,
+    }
+
+
+def _proposed_meeting_from_dict(data: dict) -> ProposedMeeting:
+    return ProposedMeeting(
+        meeting_name=data["meeting_name"],
+        start=datetime.fromisoformat(data["start"]),
+        end=datetime.fromisoformat(data["end"]),
+        participants=tuple(data["participants"]),
+        source_user_id=data["source_user_id"],
+        source_adapter_id=data["source_adapter_id"],
+    )
+
+
 @dataclass
 class Negotiator:
     agent_id: str
@@ -45,6 +67,9 @@ class Negotiator:
     _sequence_no: int = field(default=0, init=False)
     peers: dict[str, list[str]] = field(default_factory=dict, init=False)
     peer_free_busy: dict[str, list[Event]] = field(default_factory=dict, init=False)
+    proposals_emitted: dict[str, list[ProposedMeeting]] = field(default_factory=dict, init=False)
+    proposals_received: dict[str, list[ProposedMeeting]] = field(default_factory=dict, init=False)
+    proposal_responses: dict[str, dict[str, str]] = field(default_factory=dict, init=False)
 
     def hello(self, room_id: str, negotiation_id: str) -> Envelope:
         return Envelope(
@@ -122,17 +147,116 @@ class Negotiator:
             },
         )
 
+    def propose(
+        self,
+        room_id: str,
+        negotiation_id: str,
+        proposal_id: str,
+        proposed_meetings: list[ProposedMeeting],
+    ) -> Envelope:
+        self.proposals_emitted[proposal_id] = list(proposed_meetings)
+        return Envelope(
+            room_id=room_id,
+            negotiation_id=negotiation_id,
+            sender_agent_id=self.agent_id,
+            sender_user_id=self.user_id,
+            sequence_no=self._next_seq(),
+            timestamp=self.clock(),
+            message_type=MessageType.PROPOSE,
+            body={
+                "proposal_id": proposal_id,
+                "meetings": [_proposed_meeting_to_dict(m) for m in proposed_meetings],
+            },
+        )
+
+    def accept(self, room_id: str, negotiation_id: str, proposal_id: str) -> Envelope:
+        return self._response(
+            room_id, negotiation_id, proposal_id, MessageType.ACCEPT, {}
+        )
+
+    def decline(
+        self,
+        room_id: str,
+        negotiation_id: str,
+        proposal_id: str,
+        reason: str = "",
+    ) -> Envelope:
+        return self._response(
+            room_id, negotiation_id, proposal_id, MessageType.DECLINE, {"reason": reason}
+        )
+
+    def counter(
+        self,
+        room_id: str,
+        negotiation_id: str,
+        proposal_id: str,
+        alternative: list[ProposedMeeting],
+    ) -> Envelope:
+        return self._response(
+            room_id,
+            negotiation_id,
+            proposal_id,
+            MessageType.COUNTER,
+            {"alternative": [_proposed_meeting_to_dict(m) for m in alternative]},
+        )
+
+    def _response(
+        self,
+        room_id: str,
+        negotiation_id: str,
+        proposal_id: str,
+        message_type: MessageType,
+        extra_body: dict,
+    ) -> Envelope:
+        body = {"proposal_id": proposal_id}
+        body.update(extra_body)
+        return Envelope(
+            room_id=room_id,
+            negotiation_id=negotiation_id,
+            sender_agent_id=self.agent_id,
+            sender_user_id=self.user_id,
+            sequence_no=self._next_seq(),
+            timestamp=self.clock(),
+            message_type=message_type,
+            body=body,
+        )
+
+    def has_unanimous_accept(
+        self, proposal_id: str, expected_responders: set[str]
+    ) -> bool:
+        responses = self.proposal_responses.get(proposal_id, {})
+        return (
+            set(responses.keys()) >= expected_responders
+            and all(
+                responses[agent_id] == MessageType.ACCEPT.value
+                for agent_id in expected_responders
+            )
+        )
+
     def receive(self, envelope: Envelope) -> None:
         if envelope.message_type == MessageType.HELLO:
             self.peers[envelope.sender_agent_id] = list(
                 envelope.body.get("capabilities", [])
             )
         elif envelope.message_type == MessageType.FREE_BUSY:
-            # Only ingest if this FREE_BUSY is addressed to us.
             if envelope.body.get("viewer_user_id") == self.user_id:
                 self.peer_free_busy[envelope.sender_agent_id] = [
                     _event_from_dict(d) for d in envelope.body.get("events", [])
                 ]
+        elif envelope.message_type == MessageType.PROPOSE:
+            proposal_id = envelope.body["proposal_id"]
+            self.proposals_received[proposal_id] = [
+                _proposed_meeting_from_dict(d) for d in envelope.body["meetings"]
+            ]
+        elif envelope.message_type in (
+            MessageType.ACCEPT,
+            MessageType.DECLINE,
+            MessageType.COUNTER,
+        ):
+            proposal_id = envelope.body["proposal_id"]
+            self.proposal_responses.setdefault(proposal_id, {})[
+                envelope.sender_agent_id
+            ] = envelope.message_type.value
 
     def _next_seq(self) -> int:
         seq = self._sequence_no

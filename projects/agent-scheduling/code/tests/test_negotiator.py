@@ -75,20 +75,20 @@ def test_two_negotiators_can_exchange_hello():
 
 
 def test_receive_ignores_messages_of_other_types_for_now():
-    """Stub: future slices add handlers; HELLO-only is the slice 10 invariant."""
+    """Stub: future slices add handlers for the remaining message types."""
     from agent_scheduling.protocol import Envelope
     alice = _alice()
-    propose = Envelope(
+    confirm = Envelope(
         room_id="r",
         negotiation_id="n",
         sender_agent_id="agent-bob",
         sender_user_id="user-bob",
         sequence_no=0,
         timestamp=_FIXED_TIME,
-        message_type=MessageType.PROPOSE,
+        message_type=MessageType.CONFIRM,
         body={},
     )
-    alice.receive(propose)  # should not crash, no peer recorded for non-HELLO
+    alice.receive(confirm)  # CONFIRM handled in slice 16; for now should not crash
     assert alice.peers == {}
 
 
@@ -273,3 +273,109 @@ def test_free_busy_round_trips_through_json():
         window=_window(),
     )
     assert Env.from_json(env.to_json()) == env
+
+
+# Slice 15: PROPOSE + ACCEPT / COUNTER / DECLINE
+
+
+def _proposed(name: str = "m1") -> "ProposedMeeting":
+    from agent_scheduling.solver import ProposedMeeting as _PM
+    return _PM(
+        meeting_name=name,
+        start=datetime(2026, 5, 1, 9, 0),
+        end=datetime(2026, 5, 1, 10, 0),
+        participants=("u1", "u2"),
+        source_user_id="user-alice",
+        source_adapter_id="adapter-alice-gmail",
+    )
+
+
+def test_propose_emits_envelope_of_correct_type():
+    env = _alice().propose("r", "n", "prop-1", [_proposed()])
+    assert env.message_type == MessageType.PROPOSE
+
+
+def test_propose_records_proposal_internally():
+    alice = _alice()
+    alice.propose("r", "n", "prop-1", [_proposed("m1"), _proposed("m2")])
+    assert "prop-1" in alice.proposals_emitted
+    assert len(alice.proposals_emitted["prop-1"]) == 2
+
+
+def test_propose_round_trips_through_json():
+    from agent_scheduling.protocol import Envelope as Env
+    env = _alice().propose("r", "n", "prop-1", [_proposed()])
+    decoded = Env.from_json(env.to_json())
+    assert decoded == env
+
+
+def test_accept_emits_envelope_with_proposal_id():
+    env = _alice().accept("r", "n", "prop-1")
+    assert env.message_type == MessageType.ACCEPT
+    assert env.body["proposal_id"] == "prop-1"
+
+
+def test_decline_carries_reason():
+    env = _alice().decline("r", "n", "prop-1", reason="conflicts with travel")
+    assert env.message_type == MessageType.DECLINE
+    assert env.body["reason"] == "conflicts with travel"
+
+
+def test_counter_carries_alternative_meetings():
+    alt = [_proposed("alt-1")]
+    env = _alice().counter("r", "n", "prop-1", alternative=alt)
+    assert env.message_type == MessageType.COUNTER
+    assert len(env.body["alternative"]) == 1
+    assert env.body["alternative"][0]["meeting_name"] == "alt-1"
+
+
+def test_receive_propose_records_proposal():
+    alice = _alice()
+    bob_propose = _bob().propose("r", "n", "prop-2", [_proposed("m1")])
+    alice.receive(bob_propose)
+    assert alice.proposals_received["prop-2"][0].meeting_name == "m1"
+
+
+def test_receive_responses_tracked_per_agent():
+    alice = _alice()
+    alice.receive(_bob().accept("r", "n", "prop-1"))
+    assert alice.proposal_responses["prop-1"]["agent-bob"] == "ACCEPT"
+
+
+def test_unanimous_accept_when_all_responders_accept():
+    alice = _alice()
+    alice.receive(_bob().accept("r", "n", "prop-1"))
+    # Only bob is expected; alice is the proposer.
+    assert alice.has_unanimous_accept("prop-1", expected_responders={"agent-bob"})
+
+
+def test_not_unanimous_when_one_declines():
+    alice = _alice()
+    alice.receive(_bob().decline("r", "n", "prop-1"))
+    assert not alice.has_unanimous_accept("prop-1", expected_responders={"agent-bob"})
+
+
+def test_not_unanimous_when_responder_missing():
+    alice = _alice()
+    alice.receive(_bob().accept("r", "n", "prop-1"))
+    assert not alice.has_unanimous_accept(
+        "prop-1", expected_responders={"agent-bob", "agent-carol"}
+    )
+
+
+def test_end_to_end_two_agents_reach_unanimous_accept():
+    alice = _alice()
+    bob = _bob()
+
+    alice.receive(bob.hello("r", "n"))
+    bob.receive(alice.hello("r", "n"))
+    assert alice.peers and bob.peers
+
+    alice_propose = alice.propose("r", "n", "prop-cohort", [_proposed("cohort")])
+    bob.receive(alice_propose)
+    assert "prop-cohort" in bob.proposals_received
+
+    alice.receive(bob.accept("r", "n", "prop-cohort"))
+    assert alice.has_unanimous_accept(
+        "prop-cohort", expected_responders={"agent-bob"}
+    )
