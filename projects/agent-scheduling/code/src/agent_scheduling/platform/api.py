@@ -20,9 +20,11 @@ def create_app() -> FastAPI:
     @app.websocket("/ws/{room_id}")
     async def ws_endpoint(websocket: WebSocket, room_id: str) -> None:
         await websocket.accept()
-        room = app.state.rooms.get_or_create(room_id)
+        registry = app.state.rooms
+        room = registry.get_or_create(room_id)
         for message in room.recent():
             await websocket.send_json(message)
+        registry.register(room_id, websocket)
         try:
             while True:
                 message = await websocket.receive_json()
@@ -36,8 +38,10 @@ def create_app() -> FastAPI:
                     )
                     continue
                 room.post(message)
-                await websocket.send_json(message)
+                await registry.broadcast(room_id, message)
         except WebSocketDisconnect:
             return
+        finally:
+            registry.unregister(room_id, websocket)
 
     return app

@@ -116,3 +116,50 @@ def test_ws_missing_kind_returns_error():
         ws.send_json({"text": "no kind set"})
         resp = ws.receive_json()
         assert resp["error"] == "invalid_kind"
+
+
+# Slice 23: broadcast to all clients in a room
+
+
+def test_message_from_one_client_reaches_other_client_in_same_room():
+    app = create_app()
+    client = TestClient(app)
+    with client.websocket_connect("/ws/room-23a") as ws_a:
+        with client.websocket_connect("/ws/room-23a") as ws_b:
+            ws_a.send_json({"kind": "user", "text": "hello room"})
+            assert ws_a.receive_json()["text"] == "hello room"
+            assert ws_b.receive_json()["text"] == "hello room"
+
+
+def test_agent_protocol_message_round_trips_with_protocol_message_type():
+    app = create_app()
+    client = TestClient(app)
+    with client.websocket_connect("/ws/room-23b") as ws_a:
+        with client.websocket_connect("/ws/room-23b") as ws_b:
+            ws_a.send_json(
+                {
+                    "kind": "agent",
+                    "protocol_message_type": "BATCH_SCHEDULE",
+                    "body": {"meetings": []},
+                }
+            )
+            received = ws_b.receive_json()
+            assert received["kind"] == "agent"
+            assert received["protocol_message_type"] == "BATCH_SCHEDULE"
+            assert received["body"] == {"meetings": []}
+            ws_a.receive_json()  # consume sender's copy
+
+
+def test_broadcast_does_not_cross_rooms():
+    app = create_app()
+    client = TestClient(app)
+    with client.websocket_connect("/ws/room-23c") as ws_a:
+        with client.websocket_connect("/ws/room-23d") as ws_b:
+            ws_a.send_json({"kind": "user", "text": "in c only"})
+            ws_a.receive_json()
+            # ws_b should not receive — exercise this by sending its own
+            # message and confirming the next receive is its own echo, not
+            # ws_a's message.
+            ws_b.send_json({"kind": "user", "text": "in d only"})
+            received = ws_b.receive_json()
+            assert received["text"] == "in d only"
