@@ -1,17 +1,20 @@
 """Platform HTTP + WebSocket entry point."""
 from __future__ import annotations
 
+from pathlib import Path
+
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 
-from agent_scheduling.platform.chat import RoomRegistry
+from agent_scheduling.platform.chat import RoomRegistry, SqliteChatStore
 
 
 VALID_KINDS = frozenset({"user", "agent"})
 
 
-def create_app() -> FastAPI:
+def create_app(db_path: Path | None = None) -> FastAPI:
     app = FastAPI(title="agent-scheduling platform")
-    app.state.rooms = RoomRegistry()
+    store = SqliteChatStore(db_path) if db_path is not None else None
+    app.state.rooms = RoomRegistry(store=store)
 
     @app.get("/health")
     def health() -> dict:
@@ -37,7 +40,7 @@ def create_app() -> FastAPI:
                         }
                     )
                     continue
-                room.post(message)
+                registry.post(room_id, message)
                 await registry.broadcast(room_id, message)
         except WebSocketDisconnect:
             return

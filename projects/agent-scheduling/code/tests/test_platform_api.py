@@ -163,3 +163,59 @@ def test_broadcast_does_not_cross_rooms():
             ws_b.send_json({"kind": "user", "text": "in d only"})
             received = ws_b.receive_json()
             assert received["text"] == "in d only"
+
+
+# Slice 24: SQLite chat persistence
+
+
+def test_messages_persist_across_app_restart(tmp_path):
+    db = tmp_path / "chat.sqlite"
+    app1 = create_app(db_path=db)
+    client1 = TestClient(app1)
+    with client1.websocket_connect("/ws/room-24a") as ws:
+        ws.send_json({"kind": "user", "text": "before restart"})
+        ws.receive_json()
+
+    app2 = create_app(db_path=db)
+    client2 = TestClient(app2)
+    with client2.websocket_connect("/ws/room-24a") as ws:
+        replayed = ws.receive_json()
+        assert replayed["text"] == "before restart"
+
+
+def test_in_memory_registry_does_not_persist(tmp_path):
+    """Without db_path, restarts lose history (current default)."""
+    app1 = create_app()
+    client1 = TestClient(app1)
+    with client1.websocket_connect("/ws/room-24b") as ws:
+        ws.send_json({"kind": "user", "text": "ephemeral"})
+        ws.receive_json()
+
+    app2 = create_app()
+    client2 = TestClient(app2)
+    with client2.websocket_connect("/ws/room-24b") as ws:
+        # Fresh app — nothing to replay. Send and confirm we get our own echo.
+        ws.send_json({"kind": "user", "text": "fresh"})
+        echo = ws.receive_json()
+        assert echo["text"] == "fresh"
+
+
+def test_invalid_messages_are_not_persisted(tmp_path):
+    db = tmp_path / "chat.sqlite"
+    app1 = create_app(db_path=db)
+    client1 = TestClient(app1)
+    with client1.websocket_connect("/ws/room-24c") as ws:
+        ws.send_json({"kind": "robot", "text": "rejected"})
+        ws.receive_json()  # error response
+        ws.send_json({"kind": "user", "text": "valid"})
+        ws.receive_json()
+
+    app2 = create_app(db_path=db)
+    client2 = TestClient(app2)
+    with client2.websocket_connect("/ws/room-24c") as ws:
+        replayed = ws.receive_json()
+        assert replayed["text"] == "valid"
+        # Confirm only one history message: send + receive should be our echo.
+        ws.send_json({"kind": "user", "text": "after"})
+        echo = ws.receive_json()
+        assert echo["text"] == "after"
