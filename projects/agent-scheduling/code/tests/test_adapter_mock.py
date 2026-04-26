@@ -1,7 +1,12 @@
 """Tests for MockAdapter (slice 3+)."""
 from datetime import datetime
 
-from agent_scheduling.adapters import Event, MockAdapter, TimeWindow
+from agent_scheduling.adapters import (
+    Event,
+    MeetingInvite,
+    MockAdapter,
+    TimeWindow,
+)
 
 
 def _dt(hour: int) -> datetime:
@@ -52,3 +57,45 @@ def test_mock_adapter_default_constructor_is_empty():
     adapter = MockAdapter()
     window = TimeWindow(start=_dt(0), end=_dt(23))
     assert adapter.list_calendar_events(window) == []
+
+
+# Slice 4: send_invite + invite log
+
+
+def _invite(title: str = "test") -> MeetingInvite:
+    return MeetingInvite(
+        title=title,
+        start=_dt(9),
+        end=_dt(10),
+        attendees=("alice@example.com", "bob@example.com"),
+    )
+
+
+def test_send_invite_records_in_log():
+    adapter = MockAdapter()
+    invite = _invite()
+    adapter.send_invite(invite)
+    assert adapter.sent_invites == [invite]
+
+
+def test_send_invite_returns_success_with_invite_id():
+    adapter = MockAdapter()
+    result = adapter.send_invite(_invite())
+    assert result.success is True
+    assert result.invite_id is not None
+
+
+def test_send_invite_assigns_unique_ids():
+    adapter = MockAdapter()
+    r1 = adapter.send_invite(_invite("first"))
+    r2 = adapter.send_invite(_invite("second"))
+    assert r1.invite_id != r2.invite_id
+
+
+def test_sent_invites_returns_copy():
+    """Mutating the returned list must not affect the adapter's record."""
+    adapter = MockAdapter()
+    adapter.send_invite(_invite())
+    snapshot = adapter.sent_invites
+    snapshot.clear()
+    assert len(adapter.sent_invites) == 1

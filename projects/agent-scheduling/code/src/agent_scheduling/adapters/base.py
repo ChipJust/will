@@ -1,7 +1,6 @@
 """Adapter Protocol + shared value types.
 
-The Protocol grows as slices drive out additional methods (send_invite, health,
-get_send_address). At slice 3 only list_calendar_events is required.
+The Protocol grows as slices drive out additional methods.
 """
 from __future__ import annotations
 
@@ -25,5 +24,23 @@ class Event:
     location: str | None = None
 
 
+@dataclass(frozen=True)
+class MeetingInvite:
+    title: str
+    start: datetime
+    end: datetime
+    attendees: tuple[str, ...]
+    location: str | None = None
+    description: str | None = None
+
+
+@dataclass(frozen=True)
+class InviteResult:
+    success: bool
+    invite_id: str | None = None
+    error: str | None = None
+
+
 class EmailCalendarAdapter(Protocol):
     def list_calendar_events(self, window: TimeWindow) -> list[Event]: ...
+    def send_invite(self, invite: MeetingInvite) -> InviteResult: ...
