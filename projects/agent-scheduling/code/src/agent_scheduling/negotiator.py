@@ -5,8 +5,10 @@ FREE_BUSY, PROPOSE, etc. on top of the HELLO scaffolding here.
 """
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
 from datetime import datetime
+from pathlib import Path
 from typing import Callable
 
 from agent_scheduling.adapters.base import (
@@ -363,6 +365,58 @@ class Negotiator:
                         "user_id": envelope.sender_user_id,
                     }
                 )
+
+    # --- Slice 19: state persistence (crash recovery) ---
+
+    def save_state(self, path: Path) -> None:
+        state = {
+            "agent_id": self.agent_id,
+            "user_id": self.user_id,
+            "capabilities": list(self.capabilities),
+            "_sequence_no": self._sequence_no,
+            "peers": self.peers,
+            "peer_free_busy": {
+                agent_id: [_event_to_dict(e) for e in events]
+                for agent_id, events in self.peer_free_busy.items()
+            },
+            "proposals_emitted": {
+                pid: [_proposed_meeting_to_dict(m) for m in meetings]
+                for pid, meetings in self.proposals_emitted.items()
+            },
+            "proposals_received": {
+                pid: [_proposed_meeting_to_dict(m) for m in meetings]
+                for pid, meetings in self.proposals_received.items()
+            },
+            "proposal_responses": self.proposal_responses,
+            "relaxations_received": self.relaxations_received,
+            "_invites_sent_for": list(self._invites_sent_for),
+        }
+        path.write_text(json.dumps(state))
+
+    def load_state(self, path: Path) -> None:
+        state = json.loads(path.read_text())
+        if state["agent_id"] != self.agent_id:
+            raise ValueError(
+                f"State file is for agent {state['agent_id']!r}, "
+                f"refusing to load into {self.agent_id!r}"
+            )
+        self._sequence_no = state["_sequence_no"]
+        self.peers = dict(state.get("peers", {}))
+        self.peer_free_busy = {
+            agent_id: [_event_from_dict(d) for d in events]
+            for agent_id, events in state.get("peer_free_busy", {}).items()
+        }
+        self.proposals_emitted = {
+            pid: [_proposed_meeting_from_dict(d) for d in meetings]
+            for pid, meetings in state.get("proposals_emitted", {}).items()
+        }
+        self.proposals_received = {
+            pid: [_proposed_meeting_from_dict(d) for d in meetings]
+            for pid, meetings in state.get("proposals_received", {}).items()
+        }
+        self.proposal_responses = dict(state.get("proposal_responses", {}))
+        self.relaxations_received = dict(state.get("relaxations_received", {}))
+        self._invites_sent_for = set(state.get("_invites_sent_for", []))
 
     def _next_seq(self) -> int:
         seq = self._sequence_no

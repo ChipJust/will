@@ -530,3 +530,90 @@ def test_deadlock_relax_round_trips_through_json():
         "r", "n", "prop-1", "drop_meeting", {"meeting_name": "m2"}
     )
     assert Env.from_json(env.to_json()) == env
+
+
+# Slice 19: state persistence (crash recovery)
+
+
+def _populated_alice():
+    """Alice with non-trivial state: peers, free/busy, proposal, response, relaxation."""
+    alice, _ = _alice_with_adapter()
+    bob, _ = _bob_with_adapter()
+    alice.receive(bob.hello("r", "n"))
+    alice.peer_free_busy["agent-bob"] = [
+        _busy_event(),
+    ]
+    alice.propose("r", "n", "prop-1", [_proposed("cohort")])
+    alice.receive(bob.accept("r", "n", "prop-1"))
+    alice.receive(
+        bob.deadlock_relax("r", "n", "prop-2", "drop_meeting", {"meeting_name": "m2"})
+    )
+    return alice
+
+
+def test_save_state_writes_a_json_file(tmp_path):
+    alice, _ = _alice_with_adapter()
+    path = tmp_path / "state.json"
+    alice.save_state(path)
+    assert path.exists()
+    import json
+    parsed = json.loads(path.read_text())
+    assert parsed["agent_id"] == "agent-alice"
+
+
+def test_load_state_round_trips_full_state(tmp_path):
+    original = _populated_alice()
+    path = tmp_path / "state.json"
+    original.save_state(path)
+
+    restored, _ = _alice_with_adapter()
+    restored.load_state(path)
+
+    assert restored.peers == original.peers
+    assert restored.peer_free_busy == original.peer_free_busy
+    assert restored.proposals_emitted == original.proposals_emitted
+    assert restored.proposal_responses == original.proposal_responses
+    assert restored.relaxations_received == original.relaxations_received
+    assert restored._sequence_no == original._sequence_no
+
+
+def test_load_state_preserves_sequence_continuity(tmp_path):
+    """After restore, next emit should pick up where the old one left off."""
+    alice, _ = _alice_with_adapter()
+    alice.hello("r", "n")  # seq 0
+    alice.hello("r", "n")  # seq 1
+    path = tmp_path / "state.json"
+    alice.save_state(path)
+
+    restored, _ = _alice_with_adapter()
+    restored.load_state(path)
+    next_env = restored.hello("r", "n")
+    assert next_env.sequence_no == 2
+
+
+def test_load_state_refuses_mismatched_agent_id(tmp_path):
+    alice, _ = _alice_with_adapter()
+    path = tmp_path / "state.json"
+    alice.save_state(path)
+
+    bob, _ = _bob_with_adapter()
+    import pytest
+    with pytest.raises(ValueError):
+        bob.load_state(path)
+
+
+def test_load_state_into_fresh_negotiator_does_not_send_duplicate_invites(tmp_path):
+    """Crash-recovery scenario: invites already sent before restart should not re-fire."""
+    alice, alice_adapter = _alice_with_adapter()
+    alice.propose("r", "n", "prop-1", [_proposed("cohort")])
+    alice.confirm("r", "n", "prop-1")
+    assert len(alice_adapter.sent_invites) == 1
+
+    path = tmp_path / "state.json"
+    alice.save_state(path)
+
+    restored, restored_adapter = _alice_with_adapter()
+    restored.load_state(path)
+    # Replay confirm — should not double-send (idempotency preserved across restart)
+    restored.confirm("r", "n", "prop-1")
+    assert len(restored_adapter.sent_invites) == 0  # already sent in prior session
