@@ -6,6 +6,9 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from agent_scheduling.platform.chat import RoomRegistry
 
 
+VALID_KINDS = frozenset({"user", "agent"})
+
+
 def create_app() -> FastAPI:
     app = FastAPI(title="agent-scheduling platform")
     app.state.rooms = RoomRegistry()
@@ -23,6 +26,15 @@ def create_app() -> FastAPI:
         try:
             while True:
                 message = await websocket.receive_json()
+                kind = message.get("kind") if isinstance(message, dict) else None
+                if kind not in VALID_KINDS:
+                    await websocket.send_json(
+                        {
+                            "error": "invalid_kind",
+                            "message": f"'kind' must be one of {sorted(VALID_KINDS)}",
+                        }
+                    )
+                    continue
                 room.post(message)
                 await websocket.send_json(message)
         except WebSocketDisconnect:

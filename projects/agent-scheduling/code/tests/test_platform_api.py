@@ -63,10 +63,56 @@ def test_ws_rooms_are_isolated():
         ws_b.send_json({"kind": "user", "text": "in B"})
         echo = ws_b.receive_json()
         assert echo["text"] == "in B"
-        # Sending a sentinel and receiving once should be the only echo — no
-        # cross-room replay. We can't easily assert "no more messages" without
-        # blocking; instead, send a second message and confirm the next receive
-        # is its echo.
         ws_b.send_json({"kind": "user", "text": "another in B"})
         echo2 = ws_b.receive_json()
         assert echo2["text"] == "another in B"
+
+
+# Slice 22: kind field validation
+
+
+def test_ws_user_kind_round_trips():
+    app = create_app()
+    client = TestClient(app)
+    with client.websocket_connect("/ws/room-22a") as ws:
+        ws.send_json({"kind": "user", "text": "hello from a human"})
+        echo = ws.receive_json()
+        assert echo["kind"] == "user"
+        assert echo["text"] == "hello from a human"
+
+
+def test_ws_agent_kind_round_trips():
+    app = create_app()
+    client = TestClient(app)
+    with client.websocket_connect("/ws/room-22b") as ws:
+        ws.send_json(
+            {"kind": "agent", "protocol_message_type": "HELLO", "body": {}}
+        )
+        echo = ws.receive_json()
+        assert echo["kind"] == "agent"
+        assert echo["protocol_message_type"] == "HELLO"
+
+
+def test_ws_invalid_kind_returns_error_and_does_not_persist():
+    app = create_app()
+    client = TestClient(app)
+    with client.websocket_connect("/ws/room-22c") as ws:
+        ws.send_json({"kind": "robot", "text": "from a robot"})
+        resp = ws.receive_json()
+        assert resp["error"] == "invalid_kind"
+    # New subscriber should see no history (the bad message was rejected).
+    with client.websocket_connect("/ws/room-22c") as ws2:
+        ws2.send_json({"kind": "user", "text": "post-rejection"})
+        echo = ws2.receive_json()
+        # If the bad message had been persisted, it would replay first. Since
+        # we got our echo right away, the bad message is gone.
+        assert echo["text"] == "post-rejection"
+
+
+def test_ws_missing_kind_returns_error():
+    app = create_app()
+    client = TestClient(app)
+    with client.websocket_connect("/ws/room-22d") as ws:
+        ws.send_json({"text": "no kind set"})
+        resp = ws.receive_json()
+        assert resp["error"] == "invalid_kind"
