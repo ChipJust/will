@@ -106,12 +106,58 @@ Each slice has: a target test, the minimal behavior to drive, and exit criteria.
 
 ### TDD log
 
-*(empty until phase 1 begins)*
+Phases 1–3 completed in one autonomous session on 2026-04-26.
+
+**Phase 1 — Skeleton, adapter interface, agent context (slices 1–9)**
+
+| # | Behavior | Drove out |
+|---|----------|-----------|
+| 1 | `AgentContext.empty()` + JSON round-trip | `context.py`, dataclass, save/load |
+| 2 | `update_from_chat` rule-based (prefer/avoid) | `ChatExchange`, regex extractor, immutability |
+| 3 | `MockAdapter.list_calendar_events` filters by window | `adapters/base.py` Protocol, `Event`, `TimeWindow`, half-open overlap |
+| 4 | `MockAdapter.send_invite` records to log | `MeetingInvite`, `InviteResult`, send-id assignment |
+| 5 | `MockAdapter.health` + `get_send_address` | `AdapterHealth`, full Protocol surface |
+| 6 | `apply_filter(events, level)` for full_details / busy_only / decision_only | `PrivacyLevel` enum, metadata stripping |
+| 7 | `PrivacyPolicyStore` with directional lookup, default `decision_only` | per-edge get/set, asymmetry by design |
+| 8 | `MeetingPattern` + `RecurringMeetingSpec` JSON round-trip | group rhythm config |
+| 9 | `Envelope` + `MessageType` enum, datetime-as-iso | full protocol surface (10 message types) |
+
+**Phase 2 — Negotiator + solver (slices 10–19)**
+
+| # | Behavior | Drove out |
+|----|----------|-----------|
+| 10 | `Negotiator` HELLO emit/receive + capability tracking | `negotiator.py`, sequence-no, injectable clock |
+| 11 | Single-meeting solver + `BATCH_SCHEDULE` emission | `solver.py`, candidate enumeration, granularity stepping |
+| 12 | `FREE_BUSY` filtered per-recipient with directional privacy | event encode/decode helpers, viewer routing |
+| 13 | Multi-meeting batch solver with shared-participant constraint | backtracking + brute-force oracle |
+| 14 | `assign_sources` produces `ProposedMeeting` with source_user/adapter | per-meeting override + default fallback |
+| 15 | PROPOSE / ACCEPT / COUNTER / DECLINE flow + response tracking | unanimous-accept check |
+| 16 | CONFIRM emit/receive triggers `send_invite` for owned meetings | adapter registry on negotiator, idempotent send tracking |
+| 17 | `analyze_deadlock` + DEADLOCK_ASK | block-score heuristic, feasibility precheck |
+| 18 | DEADLOCK_RELAX + `apply_relaxations(drop_meeting)` | relaxation envelope, kind dispatcher |
+| 19 | Persist negotiator state to JSON for crash recovery | save_state/load_state with idempotency preservation |
+
+**Phase 3 — Chat server (slices 20–24)**
+
+| # | Behavior | Drove out |
+|----|----------|-----------|
+| 20 | FastAPI `/health` endpoint | `platform/api.py` factory + TestClient |
+| 21 | `/ws/{room_id}` WebSocket with history replay | `ChatRoom`, `RoomRegistry`, single-client echo |
+| 22 | `kind` field validation (user / agent only) | reject + report invalid, no persistence of bad msgs |
+| 23 | Broadcast to all clients in a room | per-room connection registry, `protocol_message_type` round-trip |
+| 24 | SQLite chat persistence across app restart | `SqliteChatStore`, registry write-through, history reload on first access |
 
 ### Deferred
 
-*(empty)*
+Phase 4+ (slices 25–37) requires external credentials (Google OAuth) and frontend tooling beyond what this session had access to:
+
+- **Slice 25–28 (Google adapter + OAuth):** awaiting Google API client credentials path. The `MockAdapter` proves the Protocol interface; `GoogleAdapter` is a parallel implementation against the same Protocol.
+- **Slice 29–33 (PWA + onboarding):** frontend stack not provisioned in this session. The platform-API-side surface area needed is `/groups`, `/users/me`, `/privacy-policies`, `/adapters`, plus a simple HTML shell — drive it out from a real browser environment.
+- **Slice 34–37 (cohort dry run, polish, deploy):** depends on 25–33.
 
 ### Operational notes
 
-*(empty)*
+- Python 3.14.3 via uv. `uv sync` then `uv run pytest`.
+- 135 tests pass at 0.3–1.3s wall time depending on fastapi/websocket spool-up.
+- Dependencies: `fastapi`, `httpx` (TestClient). Dev: `pytest`.
+- No persistent state outside the agent's own JSON file (slice 19) and the optional SQLite chat DB (slice 24) — both opt-in.
