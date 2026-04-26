@@ -4,7 +4,12 @@ from datetime import datetime
 import pytest
 
 from agent_scheduling.adapters.base import Event
-from agent_scheduling.privacy import PrivacyLevel, apply_filter
+from agent_scheduling.privacy import (
+    DEFAULT_LEVEL,
+    PrivacyLevel,
+    PrivacyPolicyStore,
+    apply_filter,
+)
 
 
 def _dt(hour: int) -> datetime:
@@ -72,3 +77,44 @@ def test_filter_handles_empty_input():
     assert apply_filter([], PrivacyLevel.FULL_DETAILS) == []
     assert apply_filter([], PrivacyLevel.BUSY_ONLY) == []
     assert apply_filter([], PrivacyLevel.DECISION_ONLY) == []
+
+
+# Slice 7: PrivacyPolicyStore lookup
+
+
+def test_default_level_is_decision_only():
+    assert DEFAULT_LEVEL == PrivacyLevel.DECISION_ONLY
+
+
+def test_unset_pair_returns_default():
+    store = PrivacyPolicyStore()
+    assert store.get(subject="alice", viewer="bob") == DEFAULT_LEVEL
+
+
+def test_set_then_get_returns_set_value():
+    store = PrivacyPolicyStore()
+    store.set(subject="alice", viewer="bob", level=PrivacyLevel.FULL_DETAILS)
+    assert store.get(subject="alice", viewer="bob") == PrivacyLevel.FULL_DETAILS
+
+
+def test_policies_are_directional():
+    """Asymmetry is by design — alice may share more with bob than bob shares with alice."""
+    store = PrivacyPolicyStore()
+    store.set(subject="alice", viewer="bob", level=PrivacyLevel.FULL_DETAILS)
+    store.set(subject="bob", viewer="alice", level=PrivacyLevel.BUSY_ONLY)
+    assert store.get(subject="alice", viewer="bob") == PrivacyLevel.FULL_DETAILS
+    assert store.get(subject="bob", viewer="alice") == PrivacyLevel.BUSY_ONLY
+
+
+def test_setting_one_pair_does_not_affect_others():
+    store = PrivacyPolicyStore()
+    store.set(subject="alice", viewer="bob", level=PrivacyLevel.FULL_DETAILS)
+    assert store.get(subject="alice", viewer="carol") == DEFAULT_LEVEL
+    assert store.get(subject="dave", viewer="bob") == DEFAULT_LEVEL
+
+
+def test_setting_overwrites_previous_value():
+    store = PrivacyPolicyStore()
+    store.set(subject="alice", viewer="bob", level=PrivacyLevel.FULL_DETAILS)
+    store.set(subject="alice", viewer="bob", level=PrivacyLevel.BUSY_ONLY)
+    assert store.get(subject="alice", viewer="bob") == PrivacyLevel.BUSY_ONLY
