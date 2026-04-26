@@ -28,6 +28,51 @@ class CandidateSlot:
     participants: tuple[str, ...]
 
 
+@dataclass(frozen=True)
+class ProposedMeeting:
+    """A solver slot bound to a source account responsible for sending the invite."""
+    meeting_name: str
+    start: datetime
+    end: datetime
+    participants: tuple[str, ...]
+    source_user_id: str
+    source_adapter_id: str
+
+
+def assign_sources(
+    slots: list[CandidateSlot],
+    source_map: dict[str, tuple[str, str]],
+    default: tuple[str, str] | None = None,
+) -> list[ProposedMeeting]:
+    """Bind each slot to a (source_user_id, source_adapter_id) tuple.
+
+    `source_map` provides per-meeting overrides (keyed by meeting name).
+    `default` is the fallback (typically the group leader). If neither
+    is present for a slot, raises ValueError.
+    """
+    proposed: list[ProposedMeeting] = []
+    for slot in slots:
+        if slot.meeting_name in source_map:
+            source_user_id, source_adapter_id = source_map[slot.meeting_name]
+        elif default is not None:
+            source_user_id, source_adapter_id = default
+        else:
+            raise ValueError(
+                f"No source assignment for meeting '{slot.meeting_name}' and no default."
+            )
+        proposed.append(
+            ProposedMeeting(
+                meeting_name=slot.meeting_name,
+                start=slot.start,
+                end=slot.end,
+                participants=slot.participants,
+                source_user_id=source_user_id,
+                source_adapter_id=source_adapter_id,
+            )
+        )
+    return proposed
+
+
 def _conflicts(start: datetime, end: datetime, events: list[Event]) -> bool:
     return any(event.end > start and event.start < end for event in events)
 

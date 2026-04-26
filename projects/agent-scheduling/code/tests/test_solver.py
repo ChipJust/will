@@ -197,3 +197,72 @@ def test_solver_matches_brute_force_oracle_on_tricky_instance():
     solver_feasible = solve(meetings, free_busy, _WINDOW) is not None
     oracle_feasible = _brute_force_feasible(meetings, free_busy, _WINDOW)
     assert solver_feasible == oracle_feasible
+
+
+# Slice 14: source-adapter assignment
+
+
+def _slot(name: str = "m1") -> "CandidateSlot":
+    from agent_scheduling.solver import CandidateSlot as _C
+    return _C(
+        meeting_name=name,
+        start=_dt(9),
+        end=_dt(10),
+        participants=("u1", "u2"),
+    )
+
+
+def test_assign_sources_uses_per_meeting_override():
+    from agent_scheduling.solver import assign_sources
+    proposed = assign_sources(
+        [_slot("triad-a"), _slot("triad-b")],
+        source_map={
+            "triad-a": ("user-alice", "adapter-alice-gmail"),
+            "triad-b": ("user-bob", "adapter-bob-outlook"),
+        },
+    )
+    assert proposed[0].source_user_id == "user-alice"
+    assert proposed[0].source_adapter_id == "adapter-alice-gmail"
+    assert proposed[1].source_user_id == "user-bob"
+    assert proposed[1].source_adapter_id == "adapter-bob-outlook"
+
+
+def test_assign_sources_falls_back_to_default():
+    from agent_scheduling.solver import assign_sources
+    proposed = assign_sources(
+        [_slot("cohort-monthly")],
+        source_map={},
+        default=("user-leader", "adapter-leader-gmail"),
+    )
+    assert proposed[0].source_user_id == "user-leader"
+    assert proposed[0].source_adapter_id == "adapter-leader-gmail"
+
+
+def test_assign_sources_per_meeting_overrides_default():
+    from agent_scheduling.solver import assign_sources
+    proposed = assign_sources(
+        [_slot("cohort-monthly"), _slot("triad-a")],
+        source_map={"triad-a": ("user-alice", "adapter-alice")},
+        default=("user-leader", "adapter-leader"),
+    )
+    by_name = {p.meeting_name: p for p in proposed}
+    assert by_name["cohort-monthly"].source_user_id == "user-leader"
+    assert by_name["triad-a"].source_user_id == "user-alice"
+
+
+def test_assign_sources_raises_when_no_assignment_or_default():
+    from agent_scheduling.solver import assign_sources
+    with pytest.raises(ValueError):
+        assign_sources([_slot("orphan")], source_map={}, default=None)
+
+
+def test_proposed_meeting_preserves_slot_data():
+    from agent_scheduling.solver import assign_sources
+    [proposed] = assign_sources(
+        [_slot("m1")],
+        source_map={"m1": ("user-leader", "adapter-1")},
+    )
+    assert proposed.meeting_name == "m1"
+    assert proposed.start == _dt(9)
+    assert proposed.end == _dt(10)
+    assert proposed.participants == ("u1", "u2")
