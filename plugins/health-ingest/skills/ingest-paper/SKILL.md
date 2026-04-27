@@ -44,6 +44,39 @@ Read the quality output printed to stderr:
 - `verdict=marginal` → done, but note the quality score in your response
 - `verdict=bad` → proceed to fallback chain
 
+### Cleanup pass (auto)
+
+`ingest.py` runs the extracted markdown through `tools/extract/clean_md.py`
+before quality scoring. Profiles are auto-detected by signature regex; when one
+activates, you'll see:
+
+```
+Cleaned: profile=gmail-print removed: timestamp=18, page_url=18, ...
+```
+
+and the saved YAML frontmatter gains `cleaned_with: <profile>`. No action
+needed — but **after a successful ingest, eyeball the output once.** If the
+saved markdown still has repeating headers/footers (per-page timestamps, page
+numbers, email envelope lines, etc.) and *no* `cleaned_with` line is present,
+the source format is new.
+
+**Extend, don't hand-edit.** Add a new profile to the `PROFILES` dict in
+`tools/extract/clean_md.py`:
+- `signature`: a regex unique to that source family (raises detection)
+- `signature_threshold`: how many matches before activating (usually 2–3)
+- `line_patterns`: dict of `{name: regex}`, one regex per type of noise line
+- `description`: human-readable summary
+
+Re-run ingest with `--slug <same-slug>` to overwrite. Inspect `cleaned_with`
+in the new frontmatter and the stderr removal counts. Commit the new profile
+together with the cleaned `.md`.
+
+To preview without re-extracting:
+```
+uv run python tools/extract/clean_md.py research/refs/<slug>.md --profile <name>
+```
+or `--list-profiles` to see what's known.
+
 ---
 
 ## Step 3 — Fallback Chain (PDF bad quality only)
