@@ -1,42 +1,45 @@
 # will — Agent Handoff
-*Last updated: 2026-04-26 (from session reflection)*
+*Last updated: 2026-05-09 (from session reflection)*
 
 This is the system-level context loaded by `/wake` before any subject-repo briefing.
 It re-establishes the thinking frame and durable cross-cutting facts of the whole ecosystem.
 
 ---
 
-## Latest session thinking frame (2026-04-26)
+## Latest session thinking frame (2026-05-09)
 
-This session moved on three fronts that all served one direction: *make `will` a place where software actually gets built collaboratively, then exercise the new infrastructure on a real project end-to-end.*
+This session was a planning session that demonstrated *how the 5-phase template handles a project that emerges from conversation rather than from a pre-existing design note.* Chip closed three carry-forward items in his first message (AMD discount tracking dropped — he handles purchase pricing himself; laptops bought; mom's setup done), then asked broader questions that progressively widened scope: Linux for desktop → Claude on Linux → distro choice → cross-device connectivity → NAS for family → music streaming to phone in car. After "let's go with all your recommendations," I created `projects/desktop-homelab/` from the template and filled phases 01-research and 02-requirements from conversation context. ADRs 0001–0004 written for the decisions already locked in.
 
-1. **`will/projects/` is now the collaborator-facing surface for software work.** The will/will-personal split is by **audience**, not by category — collaborator-facing artifacts (plans, designs, problems-as-design-proposals) live in `will/`; personal/ops issues live in `will-personal/problems/`. The 5-phase template (research → requirements → spec → design → implementation TDD) at `will/projects/_template/` is the canonical way to start a project. Each phase file is dual-purpose: durable prompt at top, agent-filled saved response at bottom. ADRs in a `decisions/` subfolder use Nygard format.
-
-2. **The template proved itself diagnostically.** Migrating `agent-scheduling.md` (a 2026-04-22 architecture note) into the template surfaced that the original doc had skipped requirements and gone straight to architecture. That's exactly the failure mode the template catches. STATUS dropped to phase 02 by virtue of the structure, and Chip then resolved every open requirements question in one round of Q&A — at which point spec/design rewrites were mechanical and ADRs 0001–0007 all moved to Accepted.
-
-3. **The first end-to-end autonomous TDD build for the project landed.** After Chip said "build it," the agent walked slices 1–24 (out of 37) hands-off in one session: 135 tests, one commit per slice, ~24 commits in sequence. Phase 1 (skeleton + adapters + context), phase 2 (negotiator + batch CSP solver + deadlock + state persistence), and phase 3 (FastAPI chat server with WebSocket + SQLite) all done. Stopped cleanly at slice 25 (Google OAuth) because external credentials are needed. **Prototype target: Jun 1, 2026.**
+**Key insight: project genesis modes are plural.** agent-scheduling was *migrate an architecture note into the template; the template will surface what's missing.* desktop-homelab was *discuss-first, then cement via the template.* Both work. Phase 01-research and 02-requirements can be filled by capturing what conversation already produced rather than by independent agent investigation. ADRs can be written immediately when infrastructure choices land via discussion — they're downstream of resolved requirements, not upstream. Phase 03/04/05 saved-response sections stay prompt-only until the actual work happens.
 
 **Anti-patterns to avoid:**
 
 - **Don't write angle-bracket placeholders in markdown source.** GitHub renders `<name>` as an HTML tag and eats it. Use `(name)` or backtick-wrap. Don't ship `&lt;name&gt;` HTML entities — those just appear as literal text.
-- **Don't write a "deadlock" / "infeasible" / "edge-case" test without first confirming the precondition holds.** Run the function-under-test and verify it returns the expected None/empty/etc. before asserting the consequence. Slice 17 surfaced this.
-- **Don't put stub tests for "future slices add this" using a message type that's about to be implemented.** Pick a stub that won't be touched soon, or delete the stub when the future arrives.
-- **Don't refactor existing slices "while I'm here" during a TDD walk.** Each slice is its own TDD cycle. Speculative cleanup violates YAGNI and creates noisy diffs.
+- **Don't defend a prior decision when Chip asks "is X the best choice?"** Re-examine with new context. He's pointing at the design, not asking for reassurance. Re-examination is signal of trust.
+- **Don't conflate Microsoft-services with Microsoft-protocol-authorship.** SMB is fine because Samba is the independent open-source implementation. The "no Microsoft" constraint is about managed services and lock-in, not protocol provenance. Don't refuse useful protocols on naming alone.
+- **Don't write a "deadlock" / "infeasible" / "edge-case" test without first confirming the precondition holds.** Run the function-under-test and verify it returns the expected None/empty/etc. before asserting the consequence.
+- **Don't put stub tests for "future slices add this" using a message type that's about to be implemented.** Pick a stub that won't be touched soon, or delete it when the future arrives.
+- **Don't refactor existing slices "while I'm here" during a TDD walk.** Each slice is its own TDD cycle. Speculative cleanup violates YAGNI.
+- **Don't fill 03-specification or 04-design saved-response sections from conversation when the actual spec/design hasn't been done.** Phase 03/04/05 stay prompt-only until they're worked. Capture only what's known.
+- **Don't fake-research at phase 01 if the survey happened in conversation.** Capture the surveyed-landscape from conversation directly.
 - **Don't try phase 4 (Google adapter) with mocked Google libraries** — half-work disguised as progress. Wait for real creds.
 
 **Implicit contracts:**
 
-- **"Build it" = autonomous TDD walk.** Pre-flight check first; then proceed with no permission popups; commit per slice with descriptive subject; stop at credential boundary; write a STATUS update on stop.
-- **One commit per slice.** No batching unless slices are deeply coupled. Granular history.
-- **Heavy parallel doc writes after a decision lands.** Once requirements are resolved, the rewrites are mechanical — fire them in batches, not sequentially.
-- **Pre-flight scaffolding before autonomous work.** Explicit "what I'd ask for if you have it now" + "where I'll stop without further input" + "my commitments while running."
+- **For homelab/infrastructure planning, the development approach is:** discuss → lock decisions → spawn project → write ADRs while reasoning is fresh → defer spec/design until physical migration is closer to hand. Not every project walks linearly 01→05; the template is a maximum, not a minimum.
+- **When making infrastructure recommendations, present 2+ real options with honest tradeoffs** (per `feedback_decision_posture.md`). Make the call, but make it defensible. "Let's go with all your recommendations" is the test that the framing was honest.
+- **HANDOFF cleanup is integrated into the session, not deferred to /reflect.** When Chip closes carry-forward items in his first message, drop them from HANDOFF.md immediately.
+- **"Build it" = autonomous TDD walk.** Pre-flight check first; then proceed with no permission popups; commit per slice; stop at credential boundary; write a STATUS update on stop.
+- **One commit per slice.** No batching unless deeply coupled. Granular history.
+- **Heavy parallel doc writes after a decision lands.** Once requirements are resolved, rewrites are mechanical — fire them in batches.
 
 **Design philosophy:**
 
 - `will/projects/` = collaborator-facing software work; one project per directory; 5-phase template; ADRs in `decisions/`.
-- The template is a **maximum**, not a minimum. Small projects skip phases.
+- The template is a **maximum**, not a minimum. Small projects skip phases. Some phases are filled from conversation context rather than agent investigation. Some phases stay prompt-only until physical work makes them concrete.
 - Phase files are **dual-purpose**: top half is the prompt (durable, copied from template); bottom half is the saved response (agent-filled).
 - ADR lifecycle: Proposed → Accepted (date-stamped); never edit Accepted Decision section, supersede with a new ADR instead.
+- ADRs can be written immediately when infrastructure choices land via discussion. The 04-design saved-response cross-references them; their existence in `decisions/` is independent of phase 04 having a saved response.
 
 ---
 
@@ -75,9 +78,8 @@ This session moved on three fronts that all served one direction: *make `will` a
 
 ## Open system-level items
 
-- [ ] Linux migration: dual-boot Ubuntu 24.04 on 240GB SATA SSD — linked to laptop purchase (see will-personal/hardware/projects/2026-hardware-refresh.md)
-- [ ] AI accelerator: AMD RX 7900 XTX decided as GPU baseline; Wormhole n150d for PCIE3 later — pending Chip's AMD employee GPU discount check (see hardware project)
-- [ ] Laptop purchase: 2× Lenovo Yoga 7a 2-in-1 Gen 11 — pending AMD Lenovo Affinity Store check (lenovo.com/us/vipmembers/amd/)
+- [ ] Linux migration: dual-boot Ubuntu 24.04 on 240GB SATA SSD — actively wanted (2026-05-09); laptops are bought so the desktop is no longer blocked
+- [ ] AI accelerator: AMD RX 7900 XTX decided as GPU baseline; Wormhole n150d for PCIE3 later. AMD employee discount no longer being tracked here — Chip handles purchase pricing himself.
 - [ ] Bootstrap: test setup.sh end-to-end on a clean Linux machine
 - [ ] `giving`, `prayer`, `social-influence` repos: create when ready to start
 - [ ] `writing` and `vibedaw` don't have HANDOFF.md files yet — will be created on first `/reflect` in those repos. `money` and `health` already follow the modern pattern. (Reframed 2026-04-25 from earlier "modernize" item.)
@@ -92,6 +94,7 @@ This session moved on three fronts that all served one direction: *make `will` a
 - [ ] **Autonomous-build pattern is novel.** Pre-flight → walk slices → commit per slice → stop at credential boundary → STATUS update. Worth documenting at `will/system/autonomous-build.md` once a 2nd project uses it. Reference impl: agent-scheduling phase 1–3 build (2026-04-26). (from will session 2026-04-26)
 - [ ] **The 5-phase project template is diagnostically valuable** — it surfaced that agent-scheduling's original doc had skipped requirements. After 1–2 more projects use it, evaluate the `/project` skill graduation per rule of 3. (from will session 2026-04-26)
 - [ ] **Merge money + health ingest flows.** Both repos duplicate `tools/ingest.py` + `tools/extract/`. Skill (`ingest-paper`) is already cross-repo via plugin. Trigger: 2nd repo needs a cleaner profile that already exists in money (e.g. health gets a Gmail-print PDF). Action then: graduate `tools/extract/clean_md.py` (profiles dict) + `tools/extract/from_*.py` + `tools/ingest.py` to `will/tools/`, leave thin per-repo wrappers if needed. Single source of truth for profiles. (from will session 2026-04-26 — clean_md.py introduced for Bravos Gmail-print PDF.)
+- [ ] **`desktop-homelab` project.** `projects/desktop-homelab/` created 2026-05-09 from template. Goal: convert the X299 desktop from Windows 10 to Ubuntu 24.04, expose existing storage as family-shared Samba NAS, host Navidrome music streaming for phone-via-BT-to-car, and run Claude Code as a long-running tmux session reachable over Tailscale from phone and laptop. Phases 01-research and 02-requirements completed in conversation; ADRs 0001–0004 written for distro / mesh / NAS / music decisions. **Next:** phase 03-specification — Samba share layout, Navidrome library structure, hostnames on the mesh, user-facing CLI surface. Open: NAS disk redundancy, headless vs. desktop boot, backup destination.
 - [ ] **`email-connector` project (parked).** `projects/email-connector/` created 2026-04-27 from template. Goal: capability in `will` to read the user's email so newsletter/research mail can be auto-ingested. Code+skill+setup live in `will/`; credentials+mailbox URIs+OAuth tokens live in `will-personal/`. No driving deadline — start with phase 01-research when picked up. Likely strong overlap with the agent-scheduling Google OAuth slice (25–28) — both will need a Google client setup, so coordinate so credentials are obtained once.
 - [ ] **Auto-improve principle for ingest tooling** is novel-ish and applies broadly (positions, papers, possibly emails when email-connector lands). Worth writing up as a system convention if a 3rd ingest type confirms the pattern. Reference impl: `clean_md.py` profiles dict (papers) + planned `ingest-positions` skill auto-improve checks (positions). (from money session 2026-04-27)
 - [ ] **Status-flipping living-doc pattern** (sections move from `open` to `resolved YYYY-MM-DD` with stated rule, evidence accumulated pre-resolution) is generalizable. Reference impl: `money/research/investment-strategy.md`. If a 2nd domain adopts it (health strategy? writing process?), graduate to a system convention. (from money session 2026-04-27)
@@ -99,3 +102,5 @@ This session moved on three fronts that all served one direction: *make `will` a
 - [ ] **Auto-improve principle now demonstrated 3x** — papers (clean_md profiles in `ingest-paper`), positions (ingest_positions.py parser fix surfaced as auto-improve candidate), prices (CUSIP override candidates from `prices.py` first run). Per the 2026-04-27 HANDOFF item, write up `will/system/auto-improve.md` (or merge into a tooling-conventions doc). The pattern is: each tool run evaluates whether it needs updating and **surfaces candidates, not auto-applied changes**. (from money session 2026-04-28)
 - [ ] **Pivot views via Excel Table with auto-filter** is a tooling pattern that may apply across repos. Reference impl planned at `money/tools/xlsx-export-plan.md`. If a 2nd repo wants the same (writing? health?), graduate the openpyxl Excel-Table helper to `will/tools/`. (from money session 2026-04-28)
 - [ ] **The "no-pipe" rule for tool calls** is specific to projects using a `Bash(uv run python tools/:*)`-style allowlist (which is several repos by now). The matcher splits on `|` / `>` / `2>&1` — adding pipes to a tool invocation triggers a permission prompt every time. Worth a note in `will/system/` about how project allowlists interact with compound shells, so the convention propagates. (from money session 2026-04-28)
+- [ ] **Project genesis modes are plural** — desktop-homelab proved the template handles **conversation-first** project creation as a 2nd successful genesis mode (after agent-scheduling's doc-migration-first). After a 3rd project uses the template (any mode), `/project` skill graduation per rule of 3 is justified. Strengthens the existing "5-phase template is diagnostically valuable" item. (from will session 2026-05-09)
+- [ ] **ADRs-while-fresh pattern.** When infrastructure choices land via a discussion that already resolved requirements, write ADRs immediately rather than deferring to phase 04-design. Reference impl: desktop-homelab ADRs 0001–0004 (2026-05-09). The agent-scheduling rule "don't jump to architecture before requirements" still applies; this is downstream of resolved requirements, not a violation. Worth a note in the template's ADR README once a 3rd instance lands. (from will session 2026-05-09)
