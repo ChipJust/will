@@ -32,11 +32,15 @@ import argparse
 import fnmatch
 import io
 import json
+import os
 import shutil
+import stat as stat_mod
 import sys
 import time
 from datetime import datetime
 from pathlib import Path
+
+FILE_ATTRIBUTE_REPARSE_POINT = 0x400  # Windows reparse point flag (junctions + cloud placeholders)
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
@@ -73,22 +77,79 @@ def matches(name: str, patterns: list[str]) -> bool:
     return False
 
 
-def make_ignore_fn(excludes: list[str]):
-    """shutil.copytree ignore callback: skip excluded names + reparse points."""
-    def ignore(src, names):
-        out = []
-        for name in names:
-            if matches(name, excludes):
-                out.append(name)
+def is_reparse_point(path: Path) -> bool:
+    """True for junctions, symlinks, and cloud-only placeholders on Windows."""
+    try:
+        st = path.stat(follow_symlinks=False)
+        attrs = getattr(st, "st_file_attributes", 0)
+        return bool(attrs & FILE_ATTRIBUTE_REPARSE_POINT)
+    except (OSError, AttributeError):
+        return False
+
+
+def safe_copytree(src: Path, dest: Path, excludes: list[str]) -> tuple[int, list[str]]:
+    """Copy src tree to dest, skipping reparse points and unreadable items.
+
+    Returns (files_copied, list_of_skipped_paths_with_reason).
+    Tolerates per-file OSError (cloud placeholders, junctions, access-denied
+    subdirs) and continues. shutil.copytree's all-or-nothing behavior is too
+    brittle for a real Windows user-profile tree.
+    """
+    skipped: list[str] = []
+    files_copied = 0
+
+    if src.is_file():
+        try:
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src, dest)
+            return 1, []
+        except OSError as e:
+            return 0, [f"{src}: {e}"]
+
+    def on_walk_error(err: OSError) -> None:
+        skipped.append(f"{getattr(err, 'filename', '?')}: {err.strerror or err}")
+
+    for root, dirs, files in os.walk(src, onerror=on_walk_error):
+        root_p = Path(root)
+        new_dirs = []
+        for d in dirs:
+            full = root_p / d
+            if matches(d, excludes):
                 continue
-            full = Path(src) / name
+            if is_reparse_point(full):
+                skipped.append(f"{full}: reparse point (junction/cloud placeholder)")
+                continue
+            new_dirs.append(d)
+        dirs[:] = new_dirs
+
+        rel = root_p.relative_to(src)
+        dest_dir = dest / rel
+        try:
+            dest_dir.mkdir(parents=True, exist_ok=True)
+        except OSError as e:
+            skipped.append(f"{dest_dir}: {e}")
+            continue
+
+        for f in files:
+            if matches(f, excludes):
+                continue
+            full = root_p / f
+            if is_reparse_point(full):
+                skipped.append(f"{full}: reparse point (cloud placeholder)")
+                continue
+            target = dest_dir / f
             try:
-                if full.is_symlink():
-                    out.append(name)
-            except OSError:
-                out.append(name)
-        return out
-    return ignore
+                # Idempotency: skip files already copied at the same size.
+                # Lets a re-run after a failed action skip already-copied bulk.
+                if target.exists() and target.stat().st_size == full.stat().st_size:
+                    files_copied += 1
+                    continue
+                shutil.copy2(full, target)
+                files_copied += 1
+            except OSError as e:
+                skipped.append(f"{full}: {e}")
+
+    return files_copied, skipped
 
 
 def compute_size(path: Path, excludes: list[str]) -> tuple[int, int, int]:
@@ -234,16 +295,14 @@ def main() -> None:
         log(f"        copying...", fh)
         t0 = time.time()
         try:
-            dest.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copytree(
-                source, dest,
-                ignore=make_ignore_fn(excludes),
-                dirs_exist_ok=True,
-                symlinks=False,
-            )
+            files_copied, skipped = safe_copytree(source, dest, excludes)
             elapsed = max(time.time() - t0, 0.001)
             rate = size / elapsed
-            log(f"        ✓ copied in {elapsed:,.1f}s  ({fmt_size(rate)}/s)", fh)
+            log(f"        ✓ copied {files_copied:,} files in {elapsed:,.1f}s  ({fmt_size(rate)}/s)", fh)
+            if skipped:
+                log(f"        ⚠ {len(skipped)} item(s) skipped (reparse points / access denied / cloud placeholders):", fh)
+                for s in skipped:
+                    log(f"          - {s}", fh)
             completed.add(key)
             state["completed"] = sorted(completed)
             save_state(state)

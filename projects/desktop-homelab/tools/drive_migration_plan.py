@@ -194,8 +194,7 @@ PLAN = [
     Action("copy", r"F:\Users\Chip",
            "Old 'Chip' user profile (Pictures + Voice Memos staged separately above for easy Phase B pickup)",
            dest=rf"{DEST_ROOT}\F-Chip",
-           excludes=APPDATA_CACHE_EXCLUDES + ["AppData\\Local", "AppData\\LocalLow",
-                                              ".cache", ".gradle"]),
+           excludes=APPDATA_CACHE_EXCLUDES + ["Local", "LocalLow", ".cache", ".gradle"]),
 
     # --- Surface specific F: subdirs to staging roots for Phase B ---
     # Pictures: consolidate with master picture collection on E: NAS post-Linux
