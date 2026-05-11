@@ -1,45 +1,59 @@
 # will — Agent Handoff
-*Last updated: 2026-05-09 (from session reflection)*
+*Last updated: 2026-05-10 (from session reflection)*
 
 This is the system-level context loaded by `/wake` before any subject-repo briefing.
 It re-establishes the thinking frame and durable cross-cutting facts of the whole ecosystem.
 
 ---
 
-## Latest session thinking frame (2026-05-09)
+## Latest session thinking frame (2026-05-10)
 
-This session was a planning session that demonstrated *how the 5-phase template handles a project that emerges from conversation rather than from a pre-existing design note.* Chip closed three carry-forward items in his first message (AMD discount tracking dropped — he handles purchase pricing himself; laptops bought; mom's setup done), then asked broader questions that progressively widened scope: Linux for desktop → Claude on Linux → distro choice → cross-device connectivity → NAS for family → music streaming to phone in car. After "let's go with all your recommendations," I created `projects/desktop-homelab/` from the template and filled phases 01-research and 02-requirements from conversation context. ADRs 0001–0004 written for the decisions already locked in.
+This session executed **Phase A of the desktop-homelab project** end-to-end: drive survey → migration plan with Chip's decisions → Python script with dry-run → autonomous execute → recovery from in-flight bugs → 63.6 GB / 328,771 files staged cleanly on E:\\_migration\\. The autonomous-build pattern (pre-flight → walk steps → commit per logical unit → stop at boundary → STATUS writeup) transferred from agent-scheduling's TDD walks to a data-migration walk without modification. The "boundary" here is "physical hardware change required" (install USB, BIOS) just like agent-scheduling's "credentials required."
 
-**Key insight: project genesis modes are plural.** agent-scheduling was *migrate an architecture note into the template; the template will surface what's missing.* desktop-homelab was *discuss-first, then cement via the template.* Both work. Phase 01-research and 02-requirements can be filled by capturing what conversation already produced rather than by independent agent investigation. ADRs can be written immediately when infrastructure choices land via discussion — they're downstream of resolved requirements, not upstream. Phase 03/04/05 saved-response sections stay prompt-only until the actual work happens.
+**Drive layout (post-Linux end state — was finalized this session):**
+
+- **C:** NVMe 477GB → Linux root + `/home`, **ext4** (boot from here). Wipes current Windows during install.
+- **D:** NVMe 477GB → `/workspace` (`_code`, `_notes`), **ext4** conversion last.
+- **E:** HDD 2.8TB → `/srv/nas`, **NTFS kept** (Chip's explicit decision — don't reformat).
+- **F:** SATA SSD 224GB → `/srv/media`, **ext4** (music + voice memos — SSD's no-spin-up-lag for streaming).
+
+**Technical insights worth carrying forward:**
+
+1. **`shutil.copytree` is brittle on real Windows trees.** Junction redirects, OneDrive cloud placeholders, access-denied subdirs, and file sources — any one kills the entire copytree call. Real-world solution: write your own walker with `os.walk` + per-file `try/except`. Reference impl: `projects/desktop-homelab/tools/drive_migration_stage.py::safe_copytree`. Skips Windows reparse points via `FILE_ATTRIBUTE_REPARSE_POINT` (0x400), handles file sources via `copy2`, idempotent on re-run via dest-exists-with-matching-size check.
+
+2. **Idempotency via size-match is high-leverage.** Recovery re-run took 8 seconds instead of re-copying 60+ GB because already-copied files were detected and skipped. Small code, big payoff.
+
+3. **Fnmatch-on-basenames is the convention for excludes.** Path-style patterns (`"AppData\\Local"`) silently never match against basenames. Use the basename (`"Local"`) instead. Cost this session: ~4 min wasted I/O + a debugging round.
 
 **Anti-patterns to avoid:**
 
-- **Don't write angle-bracket placeholders in markdown source.** GitHub renders `<name>` as an HTML tag and eats it. Use `(name)` or backtick-wrap. Don't ship `&lt;name&gt;` HTML entities — those just appear as literal text.
-- **Don't defend a prior decision when Chip asks "is X the best choice?"** Re-examine with new context. He's pointing at the design, not asking for reassurance. Re-examination is signal of trust.
-- **Don't conflate Microsoft-services with Microsoft-protocol-authorship.** SMB is fine because Samba is the independent open-source implementation. The "no Microsoft" constraint is about managed services and lock-in, not protocol provenance. Don't refuse useful protocols on naming alone.
-- **Don't write a "deadlock" / "infeasible" / "edge-case" test without first confirming the precondition holds.** Run the function-under-test and verify it returns the expected None/empty/etc. before asserting the consequence.
-- **Don't put stub tests for "future slices add this" using a message type that's about to be implemented.** Pick a stub that won't be touched soon, or delete it when the future arrives.
-- **Don't refactor existing slices "while I'm here" during a TDD walk.** Each slice is its own TDD cycle. Speculative cleanup violates YAGNI.
+- **Don't trust `shutil.copytree` on real Windows trees.** Use the `safe_copytree` shape (per-file try/except, reparse-point skip, idempotent size-match).
+- **Don't use path-style patterns in basename-fnmatch excludes.** Write the pattern that matches the basename of the directory to skip.
+- **Don't write multi-section summaries without a self-consistency pass.** When a summary contains cross-referenced facts (drive layouts, mount points, install targets), all sections must agree. Shipped a self-contradicting summary this session; Chip caught it ("will the Linux OS files be on F at the end") — answer was C:, not F: as a stray line claimed.
+- **Don't interpret "commit" as a natural stop point in autonomous mode.** Mid-session I committed the v2 plan + script and parked. Chip's "haha you got stuck" was the wake-up. A commit is a save-point, not a stop-point. Keep going through to the explicit stop boundary (physical hardware, credentials, decision required).
+- **Don't defend a prior decision when Chip asks "is X the best choice?"** Re-examine with new context. His terse questions point at design issues; re-examination is signal of trust.
+- **Don't write angle-bracket placeholders in markdown source.** GitHub renders `<name>` as an HTML tag and eats it. Use `(name)` or backtick-wrap.
+- **Don't conflate Microsoft-services with Microsoft-protocol-authorship.** SMB/Samba is fine; the "no Microsoft" constraint is about managed services and lock-in.
 - **Don't fill 03-specification or 04-design saved-response sections from conversation when the actual spec/design hasn't been done.** Phase 03/04/05 stay prompt-only until they're worked. Capture only what's known.
-- **Don't fake-research at phase 01 if the survey happened in conversation.** Capture the surveyed-landscape from conversation directly.
-- **Don't try phase 4 (Google adapter) with mocked Google libraries** — half-work disguised as progress. Wait for real creds.
+- **Don't try phase 4 (Google adapter) for agent-scheduling with mocked Google libraries** — half-work disguised as progress. Wait for real creds.
 
 **Implicit contracts:**
 
-- **For homelab/infrastructure planning, the development approach is:** discuss → lock decisions → spawn project → write ADRs while reasoning is fresh → defer spec/design until physical migration is closer to hand. Not every project walks linearly 01→05; the template is a maximum, not a minimum.
-- **When making infrastructure recommendations, present 2+ real options with honest tradeoffs** (per `feedback_decision_posture.md`). Make the call, but make it defensible. "Let's go with all your recommendations" is the test that the framing was honest.
+- **Migration tools follow the dry-run-first pattern.** Editable Python plan file → script reads `PLAN` list → dry-run reports sizes + conflicts → human eyeballs → `--execute` touches disk. State file makes runs resumable. This is now a pattern, not a one-off.
+- **For long-running scripts, use Monitor + run_in_background Bash pair.** `tail -f log | grep --line-buffered "completion|error"` for per-event notifications; background Bash for the definitive completion signal. No polling, no sleeping.
+- **For homelab/infrastructure planning, the development approach is:** discuss → lock decisions → spawn project → write ADRs while reasoning is fresh → defer spec/design until physical work surfaces concrete facts. Template is a maximum, not a minimum.
+- **When making infrastructure recommendations, present 2+ real options with honest tradeoffs.** "Let's go with all your recommendations" is the test that the framing was honest.
 - **HANDOFF cleanup is integrated into the session, not deferred to /reflect.** When Chip closes carry-forward items in his first message, drop them from HANDOFF.md immediately.
-- **"Build it" = autonomous TDD walk.** Pre-flight check first; then proceed with no permission popups; commit per slice; stop at credential boundary; write a STATUS update on stop.
-- **One commit per slice.** No batching unless deeply coupled. Granular history.
-- **Heavy parallel doc writes after a decision lands.** Once requirements are resolved, rewrites are mechanical — fire them in batches.
+- **"Build it" = autonomous walk** (TDD, migration, or otherwise). Pre-flight check first; proceed with no permission popups; commit per logical unit; stop at the explicit boundary; STATUS update on stop.
 
 **Design philosophy:**
 
 - `will/projects/` = collaborator-facing software work; one project per directory; 5-phase template; ADRs in `decisions/`.
-- The template is a **maximum**, not a minimum. Small projects skip phases. Some phases are filled from conversation context rather than agent investigation. Some phases stay prompt-only until physical work makes them concrete.
-- Phase files are **dual-purpose**: top half is the prompt (durable, copied from template); bottom half is the saved response (agent-filled).
+- The template is a **maximum**, not a minimum. Non-linear walks are allowed (desktop-homelab is at phase 05 with Phase A done while phases 03/04 saved-responses stay prompt-only — that's correct).
+- Phase files are **dual-purpose**: top half is the prompt (durable); bottom half is the saved response (agent-filled).
 - ADR lifecycle: Proposed → Accepted (date-stamped); never edit Accepted Decision section, supersede with a new ADR instead.
-- ADRs can be written immediately when infrastructure choices land via discussion. The 04-design saved-response cross-references them; their existence in `decisions/` is independent of phase 04 having a saved response.
+- ADRs can be written immediately when infrastructure choices land via discussion. They're downstream of resolved requirements, not upstream.
+- **safe_copytree design**: per-file try/except + accumulated skip-list, proactive reparse-point skipping, separate file-vs-tree handling, idempotent on re-run, returns `(files_copied, skipped_list)` instead of throwing on partial failure.
 
 ---
 
@@ -104,3 +118,7 @@ This session was a planning session that demonstrated *how the 5-phase template 
 - [ ] **The "no-pipe" rule for tool calls** is specific to projects using a `Bash(uv run python tools/:*)`-style allowlist (which is several repos by now). The matcher splits on `|` / `>` / `2>&1` — adding pipes to a tool invocation triggers a permission prompt every time. Worth a note in `will/system/` about how project allowlists interact with compound shells, so the convention propagates. (from money session 2026-04-28)
 - [ ] **Project genesis modes are plural** — desktop-homelab proved the template handles **conversation-first** project creation as a 2nd successful genesis mode (after agent-scheduling's doc-migration-first). After a 3rd project uses the template (any mode), `/project` skill graduation per rule of 3 is justified. Strengthens the existing "5-phase template is diagnostically valuable" item. (from will session 2026-05-09)
 - [ ] **ADRs-while-fresh pattern.** When infrastructure choices land via a discussion that already resolved requirements, write ADRs immediately rather than deferring to phase 04-design. Reference impl: desktop-homelab ADRs 0001–0004 (2026-05-09). The agent-scheduling rule "don't jump to architecture before requirements" still applies; this is downstream of resolved requirements, not a violation. Worth a note in the template's ADR README once a 3rd instance lands. (from will session 2026-05-09)
+- [ ] **safe_copytree is a generic pattern.** Real Windows trees break `shutil.copytree` on reparse points (junctions, cloud placeholders), access-denied subdirs, and file sources. Per-file try/except + reparse-point skip + idempotent size-match is the right shape. Reference impl: `projects/desktop-homelab/tools/drive_migration_stage.py` 2026-05-10. After a 2nd use case (likely Phase B finalize script, or any future migration), graduate to `will/tools/safe_copy.py`. (from will session 2026-05-10)
+- [ ] **Fnmatch-on-basenames is the exclude convention.** Path-style patterns (`"AppData\\Local"`) silently never match in the `matches()` helper used by the migration script. Write basename patterns. Worth a note in a tooling-conventions doc when one is written. Cost this session: ~4 min wasted I/O + a debugging round. (from will session 2026-05-10)
+- [ ] **Multi-section summaries need a self-consistency pass.** When a single message contains cross-referenced facts (drive layouts, mount points, install targets), all sections must agree. Shipped a self-contradicting summary 2026-05-10 (drive layout said C:=Linux root, next-steps said install on F:); Chip caught it. Final-pass review is the fix. Could be tooled later (sanity check that drive-letter references in a doc agree on roles). (from will session 2026-05-10)
+- [ ] **Autonomous-build pattern transfers from TDD to migrations.** Same shape: pre-flight → walk steps → commit per logical unit → stop at boundary → STATUS writeup. Phase A migration was the 2nd instance after agent-scheduling phases 1–3. After a 3rd domain uses it (content migration in money/health, etc.), generalize to `will/system/autonomous-build.md` as previously planned. (from will session 2026-05-10)
