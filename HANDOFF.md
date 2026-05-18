@@ -1,59 +1,94 @@
 # will — Agent Handoff
-*Last updated: 2026-05-10 (from session reflection)*
+*Last updated: 2026-05-17 (from session reflection)*
 
 This is the system-level context loaded by `/wake` before any subject-repo briefing.
 It re-establishes the thinking frame and durable cross-cutting facts of the whole ecosystem.
 
 ---
 
-## Latest session thinking frame (2026-05-10)
+## Latest session thinking frame (2026-05-17)
 
-This session executed **Phase A of the desktop-homelab project** end-to-end: drive survey → migration plan with Chip's decisions → Python script with dry-run → autonomous execute → recovery from in-flight bugs → 63.6 GB / 328,771 files staged cleanly on E:\\_migration\\. The autonomous-build pattern (pre-flight → walk steps → commit per logical unit → stop at boundary → STATUS writeup) transferred from agent-scheduling's TDD walks to a data-migration walk without modification. The "boundary" here is "physical hardware change required" (install USB, BIOS) just like agent-scheduling's "credentials required."
+Two big things across four repos this session:
 
-**Drive layout (post-Linux end state — was finalized this session):**
+1. **Bootstrapped a new life-domain repo (`home`).** Chip moved into an Austin Hill Country property (~0.5 acre, mostly woods, pool, dog run, old garden plot to reclaim). `home` is the stewardship repo, parallel to `health`, `money`, `writing`, `vibedaw` — but **intentionally a single private repo with no `home-personal` split**, because home stewardship has no framework-vs-data distinction the way medical or financial work does.
 
-- **C:** NVMe 477GB → Linux root + `/home`, **ext4** (boot from here). Wipes current Windows during install.
-- **D:** NVMe 477GB → `/workspace` (`_code`, `_notes`), **ext4** conversion last.
-- **E:** HDD 2.8TB → `/srv/nas`, **NTFS kept** (Chip's explicit decision — don't reformat).
-- **F:** SATA SSD 224GB → `/srv/media`, **ext4** (music + voice memos — SSD's no-spin-up-lag for streaming).
+2. **Graduated the ingest pipeline to `will/tools/`.** Three repos had diverged copies of `tools/ingest.py` + `tools/extract/`. The rule-of-3 trigger fired, *and* a real bug from divergence cost time mid-session (money's ingest.py lacked YouTube support; "successful" YT ingests scraped only the YouTube page footer). Unified version at `will/tools/ingest.py` now serves all three. Plugin renamed `health-ingest` → `ingest` at the same time. Standing HANDOFF items closed.
+
+**The new ingest invocation pattern (durable):**
+
+```
+uv run --project D:/_code/will python D:/_code/will/tools/ingest.py <source>
+```
+
+Run from any subject repo's cwd → output to `<cwd>/research/refs/`. Caller's cwd determines destination; will's venv provides the deps.
+
+**Plant-interests framing (preliminary — one batch of 10 sources):**
+
+Themes consistent across the first batch:
+- **Multi-purpose plants only** (food + wildlife + medicine + ornamental)
+- **Indigenous/traditional knowledge as credibility filter** ("Egyptian grain farmers", "Medieval monasteries", "Indigenous tribes called")
+- **Anti-chemical / pro-natural-systems**
+- **Perennials and natives over annuals**
+- **Wildlife-positive system thinking** (yard as ecology, not stage)
+- **High-value specialty interest** (mpingo, tonewood)
+
+Working framing for `home` agents:
+
+> Chip's plant interests skew toward: multi-purpose perennials, native or well-adapted naturalized species, indigenous/traditional knowledge as a credibility filter, wildlife-positive systems, chemical-minimal approaches, and specialty/high-value species. Annual monocultures, chemical-input landscapes, and single-purpose ornamentals are out of scope.
+
+**Don't lock it in yet.** Chip explicitly asked to discuss patterns "as they emerge" across multiple batches.
 
 **Technical insights worth carrying forward:**
 
-1. **`shutil.copytree` is brittle on real Windows trees.** Junction redirects, OneDrive cloud placeholders, access-denied subdirs, and file sources — any one kills the entire copytree call. Real-world solution: write your own walker with `os.walk` + per-file `try/except`. Reference impl: `projects/desktop-homelab/tools/drive_migration_stage.py::safe_copytree`. Skips Windows reparse points via `FILE_ATTRIBUTE_REPARSE_POINT` (0x400), handles file sources via `copy2`, idempotent on re-run via dest-exists-with-matching-size check.
+1. **Tool divergence across repos is a real failure mode.** Health had YouTube support, money had clean_md, neither had both. Bug surfaced only when home became the 3rd consumer. Rule-of-3 is the right graduation trigger.
 
-2. **Idempotency via size-match is high-leverage.** Recovery re-run took 8 seconds instead of re-copying 60+ GB because already-copied files were detected and skipped. Small code, big payoff.
+2. **Skill description ≠ code reality.** `ingest-paper` SKILL.md promised clean_md integration; neither prior `ingest.py` actually called it. Unified version does. Anti-pattern worth memorializing.
 
-3. **Fnmatch-on-basenames is the convention for excludes.** Path-style patterns (`"AppData\\Local"`) silently never match against basenames. Use the basename (`"Local"`) instead. Cost this session: ~4 min wasted I/O + a debugging round.
+3. **JS-walled HTML has a documented fallback.** Sites like thespruce.com block trafilatura AND WebFetch. Recipe: `curl -A "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Safari/605.1.15" "https://web.archive.org/web/2024/<original-url>" -o /tmp/<slug>.html` → ingest local. Should be added to `ingest-paper` SKILL.md as step 3f.
+
+4. **Cwd-relative paths break shared scripts.** For will/tools/ scripts called from any subject repo: use `Path(__file__).parent / "<resource>"` for sibling resources; keep `Path("research/refs")` cwd-relative for output. Output stays caller-relative; resources stay script-relative.
+
+5. **YouTube ingest requires explicit detection.** URLs containing `youtu.be/` or `youtube.com/` must invoke yt-dlp, not the html extractor. Otherwise: only the YouTube page footer is captured. Unified version handles this.
 
 **Anti-patterns to avoid:**
 
-- **Don't trust `shutil.copytree` on real Windows trees.** Use the `safe_copytree` shape (per-file try/except, reparse-point skip, idempotent size-match).
-- **Don't use path-style patterns in basename-fnmatch excludes.** Write the pattern that matches the basename of the directory to skip.
-- **Don't write multi-section summaries without a self-consistency pass.** When a summary contains cross-referenced facts (drive layouts, mount points, install targets), all sections must agree. Shipped a self-contradicting summary this session; Chip caught it ("will the Linux OS files be on F at the end") — answer was C:, not F: as a stray line claimed.
-- **Don't interpret "commit" as a natural stop point in autonomous mode.** Mid-session I committed the v2 plan + script and parked. Chip's "haha you got stuck" was the wake-up. A commit is a save-point, not a stop-point. Keep going through to the explicit stop boundary (physical hardware, credentials, decision required).
-- **Don't defend a prior decision when Chip asks "is X the best choice?"** Re-examine with new context. His terse questions point at design issues; re-examination is signal of trust.
-- **Don't write angle-bracket placeholders in markdown source.** GitHub renders `<name>` as an HTML tag and eats it. Use `(name)` or backtick-wrap.
-- **Don't conflate Microsoft-services with Microsoft-protocol-authorship.** SMB/Samba is fine; the "no Microsoft" constraint is about managed services and lock-in.
-- **Don't fill 03-specification or 04-design saved-response sections from conversation when the actual spec/design hasn't been done.** Phase 03/04/05 stay prompt-only until they're worked. Capture only what's known.
-- **Don't try phase 4 (Google adapter) for agent-scheduling with mocked Google libraries** — half-work disguised as progress. Wait for real creds.
+- **Don't delete duplicates before testing the unified version.** Build-test-then-delete order. If test fails, working duplicates are still in place.
+- **Don't claim "marginal" quality output for VTT as failed.** Auto-transcripts score lower because they lack punctuation. Unified version skips quality scoring for VTT.
+- **Don't write SKILL.md prose that promises code behavior that doesn't exist.** Either implement first or mark explicitly as "planned, not yet implemented."
+- **Don't auto-trust commit timestamps as "more recent = better."** Two diverged versions can each have features the other lacks. Read both before copying one.
+- **Don't write home/HANDOFF.md or home/CLAUDE.md with aspirational content before the content exists.** Bootstrap skeletons, fill after first real session.
+- **For new ingest sources, always `wc -w` and `head` the result before claiming success.** YouTube transcripts that "succeeded" with 22-line output were actually scraped YouTube page chrome, not transcripts.
 
-**Implicit contracts:**
+**Implicit contracts established this session:**
 
-- **Migration tools follow the dry-run-first pattern.** Editable Python plan file → script reads `PLAN` list → dry-run reports sizes + conflicts → human eyeballs → `--execute` touches disk. State file makes runs resumable. This is now a pattern, not a one-off.
-- **For long-running scripts, use Monitor + run_in_background Bash pair.** `tail -f log | grep --line-buffered "completion|error"` for per-event notifications; background Bash for the definitive completion signal. No polling, no sleeping.
-- **For homelab/infrastructure planning, the development approach is:** discuss → lock decisions → spawn project → write ADRs while reasoning is fresh → defer spec/design until physical work surfaces concrete facts. Template is a maximum, not a minimum.
-- **When making infrastructure recommendations, present 2+ real options with honest tradeoffs.** "Let's go with all your recommendations" is the test that the framing was honest.
-- **HANDOFF cleanup is integrated into the session, not deferred to /reflect.** When Chip closes carry-forward items in his first message, drop them from HANDOFF.md immediately.
-- **"Build it" = autonomous walk** (TDD, migration, or otherwise). Pre-flight check first; proceed with no permission popups; commit per logical unit; stop at the explicit boundary; STATUS update on stop.
+- **Cross-repo shared tools live in `will/tools/`, with deps in `will/pyproject.toml`.** Caller invokes with `--project D:/_code/will`. Output is cwd-relative.
+- **Plugin naming is repo-agnostic.** `health-ingest` → `ingest` because it serves health, money, and home. Future plugins serving multiple repos should be named for the function.
+- **Home repo breaks the public-framework / private-data split** for stewardship-style life domains. Single private repo. Document the why in CLAUDE.md.
+- **Plant research goes into `home/research/refs/` (flat structure)** — no topic subfolders until corpus warrants it.
+- **For multi-repo refactors**: use TaskCreate to track sequencing, build-test-then-delete, commit each repo's diff with a focused message, run `uv sync` to prune lockfiles after pyproject changes.
 
-**Design philosophy:**
+**Design philosophy of the unified ingest pipeline:**
+
+- One ingest.py at the meta-level, called from any subject repo's cwd
+- Sources: file paths (PDF/DOCX/VTT/HTML), URLs, YouTube links
+- YouTube auto-handled via yt-dlp (download VTT, extract, cleanup tmp)
+- clean_md profile system runs between extract and quality (auto-detect by signature regex; profile name appears in YAML header)
+- VTT skips cleanup and quality (transcripts are inherently raw/clean)
+- Output: `<cwd>/research/refs/<slug>.md` with YAML frontmatter
+- Skill (`ingest-paper`) lives in `will/plugins/ingest/` and instructs the agent on entry point + fallback chain
+
+**Carry-forward design philosophy (still applicable from prior sessions):**
 
 - `will/projects/` = collaborator-facing software work; one project per directory; 5-phase template; ADRs in `decisions/`.
-- The template is a **maximum**, not a minimum. Non-linear walks are allowed (desktop-homelab is at phase 05 with Phase A done while phases 03/04 saved-responses stay prompt-only — that's correct).
-- Phase files are **dual-purpose**: top half is the prompt (durable); bottom half is the saved response (agent-filled).
-- ADR lifecycle: Proposed → Accepted (date-stamped); never edit Accepted Decision section, supersede with a new ADR instead.
-- ADRs can be written immediately when infrastructure choices land via discussion. They're downstream of resolved requirements, not upstream.
-- **safe_copytree design**: per-file try/except + accumulated skip-list, proactive reparse-point skipping, separate file-vs-tree handling, idempotent on re-run, returns `(files_copied, skipped_list)` instead of throwing on partial failure.
+- The template is a **maximum**, not a minimum. Non-linear walks allowed.
+- Phase files are **dual-purpose**: top half prompt (durable); bottom half saved response (agent-filled).
+- ADR lifecycle: Proposed → Accepted (date-stamped); never edit Accepted, supersede with new ADR.
+- ADRs can be written immediately when infrastructure choices land via discussion. Downstream of resolved requirements, not upstream.
+- **safe_copytree design** (from 2026-05-10): per-file try/except + accumulated skip-list, proactive reparse-point skipping, separate file-vs-tree handling, idempotent on re-run.
+- **When making recommendations, present 2+ real options with honest tradeoffs.** "Let's go with all your recommendations" is the test that framing was honest.
+- **Don't defend a prior decision when Chip asks "is X the best choice?"** Re-examine with new context.
+- **Don't write angle-bracket placeholders in markdown source.** GitHub eats `<name>`. Use `(name)` or backtick-wrap.
+- **Don't conflate Microsoft-services with Microsoft-protocol-authorship.** SMB/Samba fine; "no Microsoft" applies to managed services.
 
 ---
 
@@ -122,3 +157,8 @@ This session executed **Phase A of the desktop-homelab project** end-to-end: dri
 - [ ] **Fnmatch-on-basenames is the exclude convention.** Path-style patterns (`"AppData\\Local"`) silently never match in the `matches()` helper used by the migration script. Write basename patterns. Worth a note in a tooling-conventions doc when one is written. Cost this session: ~4 min wasted I/O + a debugging round. (from will session 2026-05-10)
 - [ ] **Multi-section summaries need a self-consistency pass.** When a single message contains cross-referenced facts (drive layouts, mount points, install targets), all sections must agree. Shipped a self-contradicting summary 2026-05-10 (drive layout said C:=Linux root, next-steps said install on F:); Chip caught it. Final-pass review is the fix. Could be tooled later (sanity check that drive-letter references in a doc agree on roles). (from will session 2026-05-10)
 - [ ] **Autonomous-build pattern transfers from TDD to migrations.** Same shape: pre-flight → walk steps → commit per logical unit → stop at boundary → STATUS writeup. Phase A migration was the 2nd instance after agent-scheduling phases 1–3. After a 3rd domain uses it (content migration in money/health, etc.), generalize to `will/system/autonomous-build.md` as previously planned. (from will session 2026-05-10)
+- [ ] **Skill-description-vs-code parity is a real anti-pattern.** Caught 2026-05-17 — `ingest-paper` SKILL.md described clean_md integration in detail (with sample stderr output, "extend, don't hand-edit" guidance) but neither `health/tools/ingest.py` nor `money/tools/ingest.py` actually called clean_md. The unified `will/tools/ingest.py` now does. Convention worth memorializing: when a SKILL.md describes code behavior, the code must exhibit it OR the description must say "planned, not yet implemented." If a 2nd instance lands, write `will/system/skill-code-parity.md`. (from will session 2026-05-17)
+- [ ] **Archive.org-via-curl is a documented fallback for JS-walled HTML.** Pattern: `curl -A "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Safari/605.1.15" "https://web.archive.org/web/2024/<original-url>" -o /tmp/<slug>.html` → ingest local. Tested 2026-05-17 on thespruce.com — succeeded where trafilatura, WebFetch, and direct curl all failed. Worth adding to the `ingest-paper` SKILL.md fallback chain as step 3f. (from will session 2026-05-17)
+- [ ] **Tool+skill pattern is now demonstrated 2x with full pair**: `commit-push` (tool + skill at `will/`) and `ingest` (tool + skill at `will/`, graduated this session). Plus `revert_ingest.py` as a tool-only candidate. After a 3rd full pair lands, write `will/system/tool-skill-pairs.md`. (consolidates earlier carry-forward; 2x as of 2026-05-17)
+- [ ] **Project genesis modes — `home` is a 3rd mode**: bare-repo, no template. Life-domain repos (parallel to health/money/writing/vibedaw) don't follow `projects/_template/` — they're not software projects. Worth noting in the eventual `/project` skill spec that the template is for software projects only. (from will session 2026-05-17)
+- [ ] **New life-domain repo: `home`** (ChipJust/home, private, single-repo no -personal split). Stewardship of Austin property: pest control (DE + FSL + Cedarcide), garden reclamation, planting research, permaculture. 10 sources ingested 2026-05-17. Pattern: dual-use plants, traditional knowledge, anti-chemical, natives, wildlife-positive. Confirm/refine framing across batches. (from will session 2026-05-17)
