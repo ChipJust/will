@@ -24,6 +24,8 @@ echo "==> Installing plugins"
 claude plugins install wake
 claude plugins install reflect
 claude plugins install commit-push
-claude plugins install health-ingest 2>/dev/null || echo "    (health-ingest skipped — may not be listed yet)"
+claude plugins install ingest 2>/dev/null || echo "    (ingest skipped — may not be listed yet)"
+# Clean up the old plugin name (silent if not installed).
+claude plugins uninstall health-ingest 2>/dev/null || true
 
 echo "==> Done. Restart Claude Code to pick up the new skills."

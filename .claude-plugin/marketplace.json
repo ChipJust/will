@@ -19,9 +19,9 @@
       "category": "productivity"
     },
     {
-      "name": "health-ingest",
-      "description": "Research paper ingest fallback decision tree for the health repo.",
-      "source": "./plugins/health-ingest",
+      "name": "ingest",
+      "description": "Cross-repo source ingest — PDFs, DOCX, VTT, HTML, URLs, and YouTube transcripts into <repo>/research/refs/ as versioned markdown. Used by health, money, home.",
+      "source": "./plugins/ingest",
       "category": "productivity"
     },
     {

@@ -1,0 +1,17 @@
+[project]
+name = "will-tools"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+    "trafilatura",
+    "pymupdf4llm",
+    "pdfminer.six",
+    "pypandoc",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = []
