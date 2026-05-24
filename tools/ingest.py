@@ -16,7 +16,7 @@ Usage:
 <source> can be:
   - path to a PDF, DOCX, VTT, or HTML file
   - a URL (treated as HTML)
-  - a YouTube URL (auto-downloads transcript via yt-dlp, then cleans up)
+  - a YouTube URL (auto-fetches title + downloads transcript via yt-dlp, then cleans up)
 
 Options:
   --slug SLUG          Output filename stem (default: derived from title or filename)
@@ -76,8 +76,8 @@ def download_youtube_vtt(url: str) -> Path:
     """Download YouTube auto-generated transcript as VTT. Returns path to file."""
     tmp_stem = "_yt_tmp"
     result = subprocess.run(
-        ["yt-dlp", "--write-auto-sub", "--skip-download", "--sub-format", "vtt",
-         "-o", tmp_stem, url],
+        ["yt-dlp", "--no-warnings", "--write-auto-sub", "--skip-download",
+         "--sub-format", "vtt", "-o", tmp_stem, url],
         capture_output=True, text=True,
     )
     if result.returncode != 0:
@@ -88,6 +88,18 @@ def download_youtube_vtt(url: str) -> Path:
         print("yt-dlp ran but no VTT file was produced.", file=sys.stderr)
         sys.exit(1)
     return candidates[0]
+
+
+def get_youtube_title(url: str) -> str | None:
+    """Fetch human-readable title via yt-dlp. Returns None on failure."""
+    result = subprocess.run(
+        ["yt-dlp", "--no-warnings", "--get-title", url],
+        capture_output=True, text=True,
+    )
+    if result.returncode != 0:
+        return None
+    title = result.stdout.strip()
+    return title or None
 
 
 def detect_method(source: str) -> str:
@@ -210,6 +222,11 @@ def main():
     tmp_vtt: Path | None = None
     if is_youtube_url(source):
         youtube_url = source
+        if title_override is None:
+            print("Fetching YouTube title via yt-dlp...", file=sys.stderr)
+            title_override = get_youtube_title(source)
+            if title_override:
+                print(f"  title: {title_override}", file=sys.stderr)
         print("YouTube URL detected — downloading transcript via yt-dlp...", file=sys.stderr)
         tmp_vtt = download_youtube_vtt(source)
         source = str(tmp_vtt)
