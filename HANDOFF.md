@@ -146,11 +146,12 @@ Needs Chip:
 - [ ] Social-impact filter — was deferred to after 2026-05-08, now overdue
 - [ ] CUSIP override candidates → build `data/cusip-overrides.csv`?
 
-### home (HANDOFF: 2026-05-31 — 13 days stale, freshest)
+### home (HANDOFF: 2026-06-13 — updated this session)
 
 Agent can start:
-- [ ] Write `tools/derive_terrain.py` — LAZ → DEM → hillshade/slope/aspect/contours (unblocks steps 2, 4, 6, 7 + solar raster)
-- [ ] Write `tools/solar_exposure.py` — DEM + DSM + pvlib → per-cell annual kWh
+- [x] ~~Write `tools/derive_terrain.py`~~ — DONE 2026-06-13 (laspy + scipy + numpy; whitebox SSL failed on Py 3.14). 21.5M ground points → 0.5m DEM, hillshade, slope, aspect.
+- [x] ~~Write `tools/solar_exposure.py`~~ — DONE 2026-06-13. pvlib Ineichen clear-sky, 4405 daylight hours. 583–2479 kWh/m²/yr, median 2255.
+- [ ] Slope / drainage / sun-exposure analysis — terrain data exists, ready for interpretation
 - [ ] Move `research/refs/` to topic subfolders (33 sources, past threshold)
 
 Needs Chip:
