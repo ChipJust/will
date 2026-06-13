@@ -115,6 +115,71 @@ Working framing for `home` agents:
 
 ---
 
+## Cross-repo survey (2026-06-13)
+
+Surveyed all ecosystem repos. HANDOFFs updated where stale (home, health).
+Sorted by staleness — oldest first.
+
+### health (HANDOFF: 2026-04-11 — 63 days stale)
+
+Agent can start:
+- [ ] Analyze `research/refs/this-tiny-molecule-blocks-aging.md` — summarize claims, assess evidence, implications for Chip's stack
+- [ ] Grep `research/refs/` for abstract-only entries missing `source_url`; add DOIs
+- [ ] HANDOFF refresh — updated ingest note (now references will/tools/) but framing is stale
+- [ ] Investigate untracked `medical-history/` dir and `transcript.en.vtt` in working tree
+
+Needs Chip:
+- [ ] Source URLs for abstract-only refs where DOI isn't findable
+- [ ] Paige's BP medication name + class, allergy details (blocks health-personal stack draft)
+- [ ] Any new labs or records for Chip
+
+### money (HANDOFF: 2026-04-28 — 46 days stale)
+
+Agent can start:
+- [ ] Build `--xlsx` flag for `current_positions.py` (spec at `tools/xlsx-export-plan.md`)
+- [ ] HANDOFF refresh — 46 days stale, rebalance state likely outdated
+- [ ] Investigate untracked `data/current-positions.md` in working tree
+
+Needs Chip:
+- [ ] Rebalance status check — $128K gap was due 2026-05-08 (36 days past); KGC + ORLA dispositions
+- [ ] ELE mistake position — sell-back timing
+- [ ] Social-impact filter — was deferred to after 2026-05-08, now overdue
+- [ ] CUSIP override candidates → build `data/cusip-overrides.csv`?
+
+### home (HANDOFF: 2026-05-31 — 13 days stale, freshest)
+
+Agent can start:
+- [ ] Write `tools/derive_terrain.py` — LAZ → DEM → hillshade/slope/aspect/contours (unblocks steps 2, 4, 6, 7 + solar raster)
+- [ ] Write `tools/solar_exposure.py` — DEM + DSM + pvlib → per-cell annual kWh
+- [ ] Move `research/refs/` to topic subfolders (33 sources, past threshold)
+
+Needs Chip:
+- [ ] Site walk — expand step 1 needs checklist, property inventory (toxic/invasive plants)
+- [ ] Garden plot site assessment (sun, soil, water, deer pressure)
+- [ ] Pest-control product orders (DE on order, FSL + Cedarcide pending)
+- [ ] Cultivar selections, hugelkultur trench location, deer-deterrent layout
+- [ ] Texas811 call before any trenching
+- [ ] Batch 4 plant research — agent-curated or Chip-curated?
+
+### writing (no HANDOFF — never `/reflect`ed)
+
+- [ ] Needs first `/reflect` session to create HANDOFF.md
+- No active work items visible; last commit was writing-preferences refinement
+
+### vibedaw (no HANDOFF — never `/reflect`ed)
+
+- [ ] Needs first `/reflect` session to create HANDOFF.md
+- [ ] Untracked `.mcp.json` in working tree — gitignore or commit?
+- Extensive design docs but no implementation started; pyproject.toml + deps not yet set up
+
+### Projects in will
+
+**agent-scheduling:** Phase 4 blocked on Google OAuth credentials + test account. Jun 1 prototype target past due — re-scope or supply credentials.
+**desktop-homelab:** Phase A complete (63.6GB staged on E:\). Phase B blocked on physical Linux install (Ubuntu 24.04 on C: NVMe).
+**email-connector:** Parked. No driving deadline. Likely shares Google OAuth work with agent-scheduling.
+
+---
+
 ## Cross-cutting concerns (durable — read before working in any repo)
 
 **Python:** 3.14.3 (uv-managed). `python` and `python3` both resolve to it via `~/.bashrc`. To upgrade: `uv python install 3.X` + update one line in `~/.bashrc`.
