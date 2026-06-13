@@ -7,3 +7,4 @@ __pycache__/
 # Claude Code: ignore everything in .claude/ except the committed settings.json
 .claude/*
 !.claude/settings.json
+c46.bat

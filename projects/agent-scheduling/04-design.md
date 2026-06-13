@@ -31,16 +31,16 @@ You are entering the design phase.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                  Platform (multi-tenant cloud) — ADR 0001                │
-│                                                                           │
+│                  Platform (multi-tenant cloud) — ADR 0001               │
+│                                                                         │
 │   ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌────────────┐  │
 │   │ Auth + user  │  │ Group +      │  │ Privacy      │  │ Chat server│  │
 │   │ mgmt (OAuth) │  │ membership   │  │ policy svc   │  │ (FastAPI + │  │
 │   │ — ADR 0002   │  │ svc          │  │ — ADR 0004   │  │  WebSocket)│  │
 │   └──────────────┘  └──────────────┘  └──────────────┘  └─────┬──────┘  │
-│                                                                 │         │
-│   ┌─────────────────────────────────────────────────────────────┴─────┐ │
-│   │                  Per-user agent runtime                            │ │
+│                                                               │         │
+│   ┌───────────────────────────────────────────────────────────┴───────┐ │
+│   │                  Per-user agent runtime                           │ │
 │   │  ┌──────────────┐  ┌──────────────────┐  ┌──────────────────┐     │ │
 │   │  │ Negotiator   │  │ Solver           │  │ Agent context    │     │ │
 │   │  │ state        │  │ (batch CSP +     │  │ store (per-user  │     │ │
@@ -48,16 +48,16 @@ You are entering the design phase.
 │   │  │ (LLM-free)   │  │  weighting)      │  │  agent-writable) │     │ │
 │   │  └──────────────┘  └──────────────────┘  └──────────────────┘     │ │
 │   │  ┌──────────────────────────────────┐  ┌──────────────────┐       │ │
-│   │  │ Adapter registry (per-user-per-   │  │ LLM bridge       │       │ │
-│   │  │ provider) — ADR 0007              │  │ (Haiku default,  │       │ │
-│   │  │  • GoogleAdapter (Gmail+Cal)      │  │  Sonnet escal.)  │       │ │
-│   │  │  • OutlookAdapter, …              │  └──────────────────┘       │ │
-│   │  │  • MockAdapter (tests)            │                             │ │
-│   │  └──────────────────────────────────┘                              │ │
-│   └─────────────────────────────────────────────────────────────────┘  │
-│                                                                          │
-│   Encrypted-at-rest store: users, groups, privacy, OAuth tokens,         │
-│   chat history, agent contexts.                                          │
+│   │  │ Adapter registry (per-user-per-  │  │ LLM bridge       │       │ │
+│   │  │ provider) — ADR 0007             │  │ (Haiku default,  │       │ │
+│   │  │  • GoogleAdapter (Gmail+Cal)     │  │  Sonnet escal.)  │       │ │
+│   │  │  • OutlookAdapter, …             │  └──────────────────┘       │ │
+│   │  │  • MockAdapter (tests)           │                             │ │
+│   │  └──────────────────────────────────┘                             │ │
+│   └───────────────────────────────────────────────────────────────────┘ │
+│                                                                         │
+│   Encrypted-at-rest store: users, groups, privacy, OAuth tokens,        │
+│   chat history, agent contexts.                                         │
 └─────────────────────────────────────────────────────────────────────────┘
                        ▲                                ▲
                        │ HTTPS                          │ WebSocket
