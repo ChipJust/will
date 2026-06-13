@@ -57,7 +57,7 @@ update the relevant memory file immediately — don't defer to end of session.
 Each repo is an agent. Each agent has:
 - `CLAUDE.md` — tailored instructions for that context
 - `research/refs/` — ingested external references (if applicable)
-- `tools/ingest.py` + `tools/extract/` — ingest tooling (copied per repo)
+- Ingest tooling lives at `will/tools/ingest.py` + `will/tools/extract/` (single source of truth; repos invoke via `uv run --project D:/_code/will`)
 - `.gitignore` — excludes `.venv/`, `output/`, `*.egg-info/`, `*.pdf` (source files)
 
 Source PDFs stay local (gitignored). Only the ingested markdown is tracked.

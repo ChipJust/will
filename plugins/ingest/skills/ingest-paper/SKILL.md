@@ -34,6 +34,7 @@ uv run --project D:/_code/will python D:/_code/will/tools/ingest.py <source> [--
 | `.docx` / `.doc` | `docx` |
 | `.vtt` | `vtt` |
 | `.html` / `.htm` / URL | `html` |
+| URL ending in `.pdf` | auto-downloads, then `pymupdf` |
 | YouTube URL | auto-downloads VTT via yt-dlp |
 
 For VTT files (transcripts), cleanup and quality scoring are skipped — transcript text is inherently clean. Go straight to done.
@@ -117,7 +118,22 @@ See `references/format-detection.md` for where to look by source type (DOI, PubM
 uv run --project D:/_code/will python D:/_code/will/tools/ingest.py <url> --slug <slug>
 ```
 
-### 3e. Marker placeholder
+### 3e. Archive.org fallback (JS-walled HTML)
+
+Some sites (e.g. thespruce.com) block trafilatura AND WebFetch. Try the
+Wayback Machine cached version:
+
+```
+curl -A "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Safari/605.1.15" "https://web.archive.org/web/2024/<original-url>" -o /tmp/<slug>.html
+```
+
+Then ingest the local HTML file:
+
+```
+uv run --project D:/_code/will python D:/_code/will/tools/ingest.py /tmp/<slug>.html --slug <slug>
+```
+
+### 3f. Marker placeholder
 
 If all methods above fail or produce bad quality, tell the user:
 

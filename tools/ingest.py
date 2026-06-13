@@ -15,7 +15,7 @@ Usage:
 
 <source> can be:
   - path to a PDF, DOCX, VTT, or HTML file
-  - a URL (treated as HTML)
+  - a URL (treated as HTML, unless path ends in .pdf — auto-downloads and routes to pymupdf)
   - a YouTube URL (auto-fetches title + downloads transcript via yt-dlp, then cleans up)
 
 Options:
@@ -39,6 +39,8 @@ import subprocess
 import sys
 from datetime import date
 from pathlib import Path
+from urllib.parse import urlparse
+from urllib.request import Request, urlopen
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
@@ -100,6 +102,21 @@ def get_youtube_title(url: str) -> str | None:
         return None
     title = result.stdout.strip()
     return title or None
+
+
+def is_pdf_url(source: str) -> bool:
+    if not (source.startswith("http://") or source.startswith("https://")):
+        return False
+    return urlparse(source).path.lower().endswith(".pdf")
+
+
+def download_pdf(url: str) -> Path:
+    """Download a PDF from a URL to a temp file. Returns path to file."""
+    req = Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    tmp_path = Path("_ingest_tmp.pdf")
+    with urlopen(req) as resp, open(tmp_path, "wb") as f:
+        f.write(resp.read())
+    return tmp_path
 
 
 def detect_method(source: str) -> str:
@@ -219,7 +236,9 @@ def main():
     source, slug, title_override, force_method = parse_args()
 
     youtube_url = ""
+    pdf_url = ""
     tmp_vtt: Path | None = None
+    tmp_pdf: Path | None = None
     if is_youtube_url(source):
         youtube_url = source
         if title_override is None:
@@ -231,6 +250,12 @@ def main():
         tmp_vtt = download_youtube_vtt(source)
         source = str(tmp_vtt)
         force_method = force_method or "vtt"
+    elif is_pdf_url(source):
+        pdf_url = source
+        print("PDF URL detected — downloading...", file=sys.stderr)
+        tmp_pdf = download_pdf(source)
+        source = str(tmp_pdf)
+        force_method = force_method or "pymupdf"
 
     method = force_method or detect_method(source)
     if method not in EXTRACTORS:
@@ -242,6 +267,8 @@ def main():
 
     if tmp_vtt and tmp_vtt.exists():
         tmp_vtt.unlink()
+    if tmp_pdf and tmp_pdf.exists():
+        tmp_pdf.unlink()
 
     # Skip cleanup + quality for VTT — transcripts are inherently clean and
     # don't have the page-header noise clean_md targets.
@@ -264,7 +291,8 @@ def main():
     out_path = RESEARCH_DIR / f"{slug}.md"
 
     header = build_header(title, source, method, quality,
-                          source_url_override=youtube_url, cleaned_with=cleaned_with)
+                          source_url_override=youtube_url or pdf_url,
+                          cleaned_with=cleaned_with)
     out_path.write_text(header + "\n\n" + md_text, encoding="utf-8")
     print(f"Saved: {out_path}", file=sys.stderr)
 
