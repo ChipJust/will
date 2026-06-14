@@ -1,5 +1,5 @@
 # will — Agent Handoff
-*Last updated: 2026-06-13 (from will session — housekeeping sweep)*
+*Last updated: 2026-06-13 (from session reflection)*
 
 This is the system-level context loaded by `/wake` before any subject-repo briefing.
 It re-establishes the thinking frame and durable cross-cutting facts of the whole ecosystem.
