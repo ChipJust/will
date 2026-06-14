@@ -146,21 +146,20 @@ Needs Chip:
 - [ ] Social-impact filter — was deferred to after 2026-05-08, now overdue
 - [ ] CUSIP override candidates → build `data/cusip-overrides.csv`?
 
-### home (HANDOFF: 2026-06-13 — updated this session)
+### home (HANDOFF: 2026-06-13 — reflected this session)
 
 Agent can start:
-- [x] ~~Write `tools/derive_terrain.py`~~ — DONE 2026-06-13 (laspy + scipy + numpy; whitebox SSL failed on Py 3.14). 21.5M ground points → 0.5m DEM, hillshade, slope, aspect.
-- [x] ~~Write `tools/solar_exposure.py`~~ — DONE 2026-06-13. pvlib Ineichen clear-sky, 4405 daylight hours. 583–2479 kWh/m²/yr, median 2255.
-- [ ] Slope / drainage / sun-exposure analysis — terrain data exists, ready for interpretation
-- [ ] Move `research/refs/` to topic subfolders (33 sources, past threshold)
+- [x] ~~derive_terrain.py~~ — DONE. laspy + scipy + numpy. DEM + DSM + hillshade + slope + aspect.
+- [x] ~~solar_exposure.py~~ — DONE. pvlib Ineichen clear-sky. 583–2479 kWh/m²/yr.
+- [x] ~~terrain_viewer.py~~ — DONE. Rewritten from plotly to three.js. NAIP satellite drape. 0.5 MB.
+- [x] ~~research/refs/ subfolder reorg~~ — DONE. plants/ (16), snakes/ (10), birds/ (5), design/ (2).
+- [ ] **Phase A — Manual scene bootstrapping** (plans/3d-model.md). Create scene.json, render envelopes.
+- [ ] Slope/drainage/sun-exposure interpretation from terrain data
 
 Needs Chip:
-- [ ] Site walk — expand step 1 needs checklist, property inventory (toxic/invasive plants)
-- [ ] Garden plot site assessment (sun, soil, water, deer pressure)
-- [ ] Pest-control product orders (DE on order, FSL + Cedarcide pending)
-- [ ] Cultivar selections, hugelkultur trench location, deer-deterrent layout
-- [ ] Texas811 call before any trenching
-- [ ] Batch 4 plant research — agent-curated or Chip-curated?
+- [ ] Property walk with phone (40-60 photos/tree for COLMAP capture pipeline)
+- [ ] Site walk, garden assessment, inventory walk, Texas811 call
+- [ ] Pest-control products, cultivar selections, hugelkultur trench location
 
 ### writing (no HANDOFF — never `/reflect`ed)
 
@@ -260,3 +259,5 @@ Needs Chip:
 - [ ] **Research-agent → evidence-assessment → goal-revision is a workflow pattern.** When commissioning research, ask the agent for an *honest evidence assessment*, not just a source compilation. Reference impl: snake-ecology research agent (2026-05-31) returned URLs grouped by authority PLUS a 2–3-sentence "what the literature actually says" summary distinguishing well-supported claims (king-snake predation on rattlesnakes via venom immunity) from folk ecology (rat-snake displacement of rattlesnakes). The evidence assessment was the actionable output that drove the goal-doc revision; the URL list was scaffolding. Single instance; revisit pattern after a 2nd lands. (from home session 2026-05-31)
 - [ ] **Parallel-Bash sibling-cancellation on first failure** is a harness behavior. When firing multiple Bash tool calls in parallel, one error cancels the rest. Workaround: chain commands with `;` in a single Bash call when the operations are independent but you want failures to NOT cascade-cancel siblings. Reference: snake-research ingest batch (2026-05-31) — 11 parallel ingest calls had 3 complete before a PDF-URL failure cancelled 7 others; chained `;` retry of the remaining 7 worked cleanly. Worth a note in a tooling-conventions doc when one is written. (from home session 2026-05-31)
 - [ ] **Marginal-quality ingest threshold.** Current `ingest.py` writes output for quality scores as low as 60 (with a warning). Score 60 with 88 words = pure navigation chrome and should fail outright. Worth either tightening the gate to ~70 or requiring `--allow-marginal` to write the file. Small tool improvement. (from home session 2026-05-31)
+- [ ] **Three.js viewer pattern (Python-generates-HTML with JS rendering) may be reusable** across repos if other domains need spatial visualization. Python encodes data as base64/JSON, JS template renders. The boundary is at data encoding, not the rendering API. Single instance (home terrain viewer, 2026-06-13); watch for 2nd. (from home session 2026-06-13)
+- [ ] **pycolmap GPU support on AMD (ROCm) is experimental.** When the Linux desktop migration happens, test COLMAP dense reconstruction on the RX 7900 XTX. Fallback is CPU (~10min/object vs ~1min). Could affect home Phase B (phone capture pipeline) at scale. (from home session 2026-06-13)
