@@ -32,12 +32,11 @@ Personal/operational issues (windows-hardware, etc.) live in `will-personal/prob
 
 ## Session start (wake-up routine)
 
-Before doing anything else in a new session:
-1. Read `HANDOFF.md` — current system state, cross-cutting concerns, open items
-2. Read `ORIENTATION.md` — what lives here and design principles
-3. Read `PLAN.md` — master architecture if doing structural work
+A SessionStart hook runs `tools/wake_report.py` and injects a briefing into this
+conversation. Present the briefing in your first response and ask for direction.
 
-Or just run `/wake` and it handles all of this.
+If the briefing is missing or stale, run `python D:/_code/will/tools/wake_report.py --raw`
+and present the output. For structural work, also read `ORIENTATION.md` and `PLAN.md`.
 
 ## Working here
 

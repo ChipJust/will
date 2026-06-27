@@ -21,11 +21,11 @@ claude plugins marketplace remove will-plugins 2>/dev/null || true
 claude plugins marketplace add "$WILL_DIR"
 
 echo "==> Installing plugins"
-claude plugins install wake
 claude plugins install reflect
 claude plugins install commit-push
 claude plugins install ingest 2>/dev/null || echo "    (ingest skipped — may not be listed yet)"
-# Clean up the old plugin name (silent if not installed).
+# Clean up retired plugins (silent if not installed).
 claude plugins uninstall health-ingest 2>/dev/null || true
+claude plugins uninstall wake 2>/dev/null || true
 
 echo "==> Done. Restart Claude Code to pick up the new skills."

@@ -1,41 +1,46 @@
 # will — Agent Handoff
-*Last updated: 2026-06-13 (from session reflection)*
+*Last updated: 2026-06-27 (from session reflection)*
 
-This is the system-level context loaded by `/wake` before any subject-repo briefing.
-It re-establishes the thinking frame and durable cross-cutting facts of the whole ecosystem.
+This is the system-level context loaded by the SessionStart hook (`tools/wake_report.py`)
+before any subject-repo briefing. It re-establishes the thinking frame and durable
+cross-cutting facts of the whole ecosystem.
 
 ---
 
-## Latest session thinking frame (2026-06-13)
+## Latest session thinking frame (2026-06-27)
 
-Housekeeping sweep — graduated three conventions that had hit rule-of-3, fixed a
-real ingest bug, and cleaned up stale HANDOFF items accumulated since 2026-05-17.
+Converted the `/wake` skill into an automatic SessionStart hook. The wake plugin is
+removed — session context now loads via `tools/wake_report.py` injected by a hook.
 
 **What shipped this session:**
 
-1. **Wrote `system/skill-tool-popup-pattern.md`** — 3rd instance (PDF URL detection)
-   landed 2026-05-31; now documented. The pattern: deterministic pre-steps in skill
-   docs should move inside the tool to eliminate permission popups.
+1. **Built `tools/wake_report.py`** — stdlib-only script (~310 lines). Reads all ecosystem
+   HANDOFFs, extracts structured data (dates, thinking frames, open items), generates a
+   formatted briefing. Handles 3 CWD scenarios: agentic repo as focus, will as focus,
+   non-agentic directory. Caches to `.cache/wake-report.md`.
 
-2. **Wrote `system/auto-improve.md`** — 3 instances (clean_md profiles, position parser,
-   CUSIP overrides) documented. The pattern: tools surface improvement candidates on
-   stderr, never auto-apply.
+2. **Configured first SessionStart hook** in user-global `~/.claude/settings.json`. Fires
+   on all SessionStart events (startup, resume, clear, compact). Script stdout is injected
+   as a system reminder — the agent sees the briefing in context before the first prompt.
 
-3. **Fixed ingest.py PDF-URL detection.** URLs ending in `.pdf` now auto-download to a
-   temp file and route to pymupdf instead of failing through the HTML extractor.
+3. **Removed wake plugin entirely** — deleted `plugins/wake/`, updated marketplace.json,
+   install.sh, settings.json. Ran `claude plugins uninstall wake`.
 
-4. **Updated `system/conventions.md`** — corrected stale ingest-tooling note (was "copied
-   per repo", now reflects the graduated single-source-of-truth at `will/tools/`).
+4. **Updated CLAUDE.md** — session-start section now references the hook and manual fallback.
 
-5. **Cleaned up stale HANDOFF items** — `agent-tools/` directory already gone (marked done),
-   consolidated duplicate items, noted agent-scheduling Jun 1 deadline has passed.
+**Parser handles real HANDOFF variation:**
+- Health: inline bold `**Thinking frame:**`
+- Home: `## Thinking frame (date)`
+- Will: `## Latest session thinking frame (date)`
+- Money: opening paragraph, no explicit heading
+- Two bugs caught during testing: cross-repo survey item leakage (fixed with
+  `in_cross_survey` flag) and category flip from item text containing "needs Chip"
+  (fixed by skipping category detection on checkbox lines).
 
-**Prior session context (2026-05-17 through 2026-05-31):**
+**Prior session context (2026-06-13):**
 
-Bootstrapped `home` repo, graduated ingest pipeline to `will/tools/`, ran home-domain
-research batches (15 sources across plants/permaculture/pest-control/snake-ecology),
-built property-mapping tools (TCAD polygon + USGS LIDAR), refined plant-interests
-framework. See items below for carry-forward details.
+Cross-repo survey, convention graduation (skill-tool-popup-pattern.md, auto-improve.md),
+ingest.py PDF-URL fix, HANDOFF refresh across repos.
 
 **The new ingest invocation pattern (durable):**
 
@@ -207,7 +212,7 @@ Needs Chip:
 
 ## Session practices
 
-- **Start:** `/wake` — loads this file + subject-repo HANDOFF.md, briefs on next steps
+- **Start:** SessionStart hook runs `tools/wake_report.py` — loads all HANDOFFs, briefs on next steps
 - **End:** `/reflect` — writes reflection to will-personal, updates subject-repo HANDOFF.md
 - **Mid-session:** `/reflect review` — updates next steps list without full reflection
 
@@ -261,3 +266,5 @@ Needs Chip:
 - [ ] **Marginal-quality ingest threshold.** Current `ingest.py` writes output for quality scores as low as 60 (with a warning). Score 60 with 88 words = pure navigation chrome and should fail outright. Worth either tightening the gate to ~70 or requiring `--allow-marginal` to write the file. Small tool improvement. (from home session 2026-05-31)
 - [ ] **Three.js viewer pattern (Python-generates-HTML with JS rendering) may be reusable** across repos if other domains need spatial visualization. Python encodes data as base64/JSON, JS template renders. The boundary is at data encoding, not the rendering API. Single instance (home terrain viewer, 2026-06-13); watch for 2nd. (from home session 2026-06-13)
 - [ ] **pycolmap GPU support on AMD (ROCm) is experimental.** When the Linux desktop migration happens, test COLMAP dense reconstruction on the RX 7900 XTX. Fallback is CPU (~10min/object vs ~1min). Could affect home Phase B (phone capture pipeline) at scale. (from home session 2026-06-13)
+- [ ] **SessionStart hook is the first hook in the ecosystem.** If it proves out, other automated behaviors (auto-reflect, pre-commit checks) could follow the same pattern. Worth a note in `will/system/` after a 2nd hook lands. (from will session 2026-06-27)
+- [ ] **Tool-replaces-skill is a 3rd instance of the skill-tool-popup pattern.** The wake conversion is the most extreme case — the entire skill became a tool+hook. `system/skill-tool-popup-pattern.md` may need updating to cover full-replacement. (from will session 2026-06-27)
