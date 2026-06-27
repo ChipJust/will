@@ -1,5 +1,5 @@
 # will — Agent Handoff
-*Last updated: 2026-06-27 (from session reflection)*
+*Last updated: 2026-06-27 (from session 2 reflection)*
 
 This is the system-level context loaded by the SessionStart hook (`tools/wake_report.py`)
 before any subject-repo briefing. It re-establishes the thinking frame and durable
@@ -27,6 +27,12 @@ removed — session context now loads via `tools/wake_report.py` injected by a h
    install.sh, settings.json. Ran `claude plugins uninstall wake`.
 
 4. **Updated CLAUDE.md** — session-start section now references the hook and manual fallback.
+
+**Verified in session 2 (same day):**
+
+- SessionStart hook fires correctly — confirmed by system-reminder injection on session start from `D:\_code`.
+- **Bug found and fixed:** `identify_repo()` returned `"."` as repo name when cwd was exactly CODE_ROOT (`D:/_code`). Guard added: `if repo_name == ".": return None, None`.
+- **System reminders are invisible to the user.** The hook injects the briefing as a system-reminder. The agent sees it but the user does not. The agent must present the briefing as text output before responding to anything else. This is a behavioral requirement, not a code fix.
 
 **Parser handles real HANDOFF variation:**
 - Health: inline bold `**Thinking frame:**`
@@ -268,3 +274,4 @@ Needs Chip:
 - [ ] **pycolmap GPU support on AMD (ROCm) is experimental.** When the Linux desktop migration happens, test COLMAP dense reconstruction on the RX 7900 XTX. Fallback is CPU (~10min/object vs ~1min). Could affect home Phase B (phone capture pipeline) at scale. (from home session 2026-06-13)
 - [ ] **SessionStart hook is the first hook in the ecosystem.** If it proves out, other automated behaviors (auto-reflect, pre-commit checks) could follow the same pattern. Worth a note in `will/system/` after a 2nd hook lands. (from will session 2026-06-27)
 - [ ] **Tool-replaces-skill is a 3rd instance of the skill-tool-popup pattern.** The wake conversion is the most extreme case — the entire skill became a tool+hook. `system/skill-tool-popup-pattern.md` may need updating to cover full-replacement. (from will session 2026-06-27)
+- [ ] **System-reminder invisibility is a design constraint for hooks.** SessionStart hook output is only visible to the agent, not the user. Any hook that produces user-facing output needs the agent to relay it as text. This affects future hook designs (auto-reflect, pre-commit checks). (from will session 2 2026-06-27)

@@ -101,7 +101,10 @@ def resolve_cwd():
 def identify_repo(cwd):
     try:
         rel = cwd.relative_to(CODE_ROOT)
-        repo_name = str(rel).replace("\\", "/").split("/")[0]
+        parts = str(rel).replace("\\", "/").split("/")
+        repo_name = parts[0]
+        if repo_name == ".":
+            return None, None
         repo_path = CODE_ROOT / repo_name
         if repo_path.is_dir():
             return repo_name, repo_path
