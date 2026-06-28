@@ -67,12 +67,19 @@ def log(message: str) -> None:
 
 
 def build_statusline(data: dict) -> str:
+    model = data.get('model') or {}
+    ctx = data.get('context_window') or {}
+    usage = ctx.get('current_usage') or {}
+    cost = data.get('cost') or {}
+
+    tokens_used = usage.get('cache_creation_input_tokens', 0) + usage.get('cache_read_input_tokens', 0)
+
     return (
-        f"{data.get('model', {}).get('display_name', 'Unknown Model')} | "
-        f"{data.get('context_window', {}).get('current_usage', {}).get('cache_creation_input_tokens', 0) + data.get('context_window', {}).get('current_usage', {}).get('cache_read_input_tokens', 0):,} / "
-        f"{data.get('context_window', {}).get('context_window_size', 0):,} "
-        f"({data.get('context_window', {}).get('used_percentage', 0)}%) | "
-        f"${data.get('cost', {}).get('total_cost_usd', 0):,.2f} | "
+        f"{model.get('display_name', 'Unknown Model')} | "
+        f"{tokens_used:,} / "
+        f"{ctx.get('context_window_size', 0):,} "
+        f"({ctx.get('used_percentage', 0)}%) | "
+        f"${cost.get('total_cost_usd', 0):,.2f} | "
         f"{Path(data.get('cwd', 'UNKNOWN'))}"
     )
 

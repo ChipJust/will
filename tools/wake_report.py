@@ -42,6 +42,8 @@ WILL_DIR = CODE_ROOT / "will"
 CACHE_DIR = WILL_DIR / ".cache"
 CACHE_FILE = CACHE_DIR / "wake-report.md"
 LOG_FILE = Path.home() / ".claude" / "wake-report-debug.log"
+STATUSLINE_LOG = Path.home() / ".claude" / "statusline-debug.log"
+TASKS_FILE = WILL_DIR / "tasks.md"
 
 SUBJECT_REPOS = ["health", "money", "home", "writing", "vibedaw"]
 
@@ -68,6 +70,66 @@ def log(message):
             f.write(f"[{datetime.now().isoformat()}] {message}\n")
     except Exception:
         pass
+
+
+RE_STATUSLINE_ERROR = re.compile(r"ERROR building statusline:")
+RE_TASK_STATUSLINE = re.compile(
+    r"^- \[[ x]\] \*\*Statusline errors\*\*"
+)
+
+
+def check_statusline_errors():
+    """Check statusline-debug.log for errors, create/update task in tasks.md."""
+    if not STATUSLINE_LOG.exists():
+        return 0
+
+    try:
+        text = STATUSLINE_LOG.read_text(encoding="utf-8", errors="replace")
+    except Exception as e:
+        log(f"Failed to read statusline log: {e}")
+        return 0
+
+    error_count = len(RE_STATUSLINE_ERROR.findall(text))
+    if error_count == 0:
+        return 0
+
+    log(f"Statusline errors found: {error_count}")
+
+    if not TASKS_FILE.exists():
+        return error_count
+
+    try:
+        tasks_text = TASKS_FILE.read_text(encoding="utf-8")
+    except Exception as e:
+        log(f"Failed to read tasks.md: {e}")
+        return error_count
+
+    lines = tasks_text.splitlines()
+    task_idx = None
+    for i, line in enumerate(lines):
+        if RE_TASK_STATUSLINE.match(line.strip()):
+            task_idx = i
+            break
+
+    today = date.today().isoformat()
+    task_line = (
+        f"- [ ] **Statusline errors** — {error_count} errors in "
+        f"`~/.claude/statusline-debug.log` (checked {today}). "
+        f"Debug `will/tools/statusline.py`."
+    )
+
+    if task_idx is not None:
+        lines[task_idx] = task_line
+    else:
+        lines.append(task_line)
+
+    try:
+        TASKS_FILE.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="")
+        log(f"Tasks.md {'updated' if task_idx is not None else 'added'} statusline task: {error_count} errors")
+    except Exception as e:
+        log(f"Failed to write tasks.md: {e}")
+
+    return error_count
 
 
 def resolve_cwd():
@@ -549,6 +611,8 @@ def main():
 
     focus_repo, focus_path = identify_repo(cwd)
     log(f"Focus repo: {focus_repo}")
+
+    statusline_errors = check_statusline_errors()
 
     repos = discover_repos()
     log(f"Discovered {len(repos)} repos: {list(repos.keys())}")
