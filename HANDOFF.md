@@ -230,7 +230,7 @@ Needs Chip:
 - [ ] AI accelerator: AMD RX 7900 XTX decided as GPU baseline; Wormhole n150d for PCIE3 later. AMD employee discount no longer being tracked here — Chip handles purchase pricing himself.
 - [ ] Bootstrap: test setup.sh end-to-end on a clean Linux machine
 - [ ] `giving`, `prayer`, `social-influence` repos: create when ready to start
-- [ ] `writing` and `vibedaw` don't have HANDOFF.md files yet — will be created on first `/reflect` in those repos. `money` and `health` already follow the modern pattern. (Reframed 2026-04-25 from earlier "modernize" item.)
+- [x] `writing` and `vibedaw` don't have HANDOFF.md files yet — **DONE 2026-06-28.** First reflections written, HANDOFF.md created in both repos. All 5 subject repos now have HANDOFFs.
 - [ ] Concept-skill pattern is likely cross-cutting. If money v2+ proves it out, the skill format + runtime should graduate to `will/plugins/` so health, writing, and others can adopt. (from money session 2026-04-20)
 - [ ] Skill-as-knowledge-forwarding is a novel-ish pattern. Worth writing up as a system convention if concept-skills prove out — gives other repos a template for encapsulating and transferring domain knowledge rather than dumping raw docs (from money session 2026-04-20)
 - [x] Cleanup: `will/agent-tools/` directory — already removed as of 2026-06-13 check (was empty after rename to `tools/`). (from will session 2026-04-25, closed 2026-06-13)
