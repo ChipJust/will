@@ -23,6 +23,12 @@
       "description": "Skill that wraps the commit_push.py tool — replaces the git add/commit/push chain with one pre-approved CLI call.",
       "source": "./plugins/commit-push",
       "category": "productivity"
+    },
+    {
+      "name": "phone",
+      "description": "Import files from a connected phone via MTP/USB. List, copy, and extract video frames.",
+      "source": "./plugins/phone",
+      "category": "productivity"
     }
   ]
 }

@@ -1,0 +1,8 @@
+{
+  "name": "phone",
+  "description": "Import files from a connected phone via MTP/USB. Supports listing, copying, and frame extraction from video.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Chip Ueltschey"
+  }
+}

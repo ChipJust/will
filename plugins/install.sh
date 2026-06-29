@@ -24,6 +24,7 @@ echo "==> Installing plugins"
 claude plugins install reflect
 claude plugins install commit-push
 claude plugins install ingest 2>/dev/null || echo "    (ingest skipped — may not be listed yet)"
+claude plugins install phone 2>/dev/null || echo "    (phone skipped — may not be listed yet)"
 # Clean up retired plugins (silent if not installed).
 claude plugins uninstall health-ingest 2>/dev/null || true
 claude plugins uninstall wake 2>/dev/null || true
