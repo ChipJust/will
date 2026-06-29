@@ -47,7 +47,7 @@ Then add any new items that surfaced since the last review.
 
 Output the updated list to the file. Do not write a full reflection. Commit the update:
 ```
-cd D:\_code\will-personal && git add reflections/ && git commit -m "Update next steps: YYYY-MM-DD <repo>" && git push
+python D:/_code/will/tools/commit_push.py D:/_code/will-personal reflections/<file>.md -m "Update next steps: YYYY-MM-DD <repo>"
 ```
 
 ---
@@ -156,7 +156,7 @@ already live in the reflection archive.
 
 Also commit the update to the subject repo:
 ```
-cd D:\_code\<repo> && git add HANDOFF.md && git commit -m "Update agent handoff: YYYY-MM-DD" && git push
+python D:/_code/will/tools/commit_push.py D:/_code/<repo> HANDOFF.md -m "Update agent handoff: YYYY-MM-DD"
 ```
 
 ---
@@ -183,7 +183,7 @@ For each one, append it to the "Open system-level items" list in `D:\_code\will\
 ```
 Then commit:
 ```
-cd D:\_code\will && git add HANDOFF.md && git commit -m "HANDOFF: bubble up items from <repo> YYYY-MM-DD" && git push
+python D:/_code/will/tools/commit_push.py D:/_code/will HANDOFF.md -m "HANDOFF: bubble up items from <repo> YYYY-MM-DD"
 ```
 
 **5b — Update PLAN.md if architecture changed:**
@@ -198,7 +198,7 @@ problem was logged or resolved, update `D:\_code\will\PLAN.md` accordingly:
 ### Step 6 — Commit the reflection
 
 ```
-cd D:\_code\will-personal && git add reflections/ && git commit -m "Add session reflection: YYYY-MM-DD <repo>" && git push
+python D:/_code/will/tools/commit_push.py D:/_code/will-personal reflections/YYYY-MM-DD-<repo>.md -m "Add session reflection: YYYY-MM-DD <repo>"
 ```
 
 ---
