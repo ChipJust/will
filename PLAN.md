@@ -35,6 +35,7 @@ rationale — this is a foundational design decision that applies to every repo.
 | `vibedaw` | Music | Active | Music context agent. Branded name retained. |
 | `money` | Personal Finance & Investment | Active | Maximize investment returns while weighing social impact of supported business activity. |
 | `home` | Home / Property Stewardship | Active | Pest control, garden reclamation, planting, permaculture, pool, maintenance. Single private repo (no `-personal` split — life-domain repo, not a software project). |
+| `spatium` | 4D World Modeling | Active | General-purpose 4D (3 spatial + time) world modeling engine. Extracted from home's 3D pipeline. Latin-named modules (locus/tempus/corpus/mundus). Supports concurrent actors, push notifications, pluggable renderers. |
 | `giving` | Charitable Giving | Planned | Manage charitable money for the glory of Jesus Christ and love of neighbor. |
 | `prayer` | Prayer | Planned | Track prayer requests, prayers offered, and follow-up outcomes. |
 | `social-influence` | Social Influence | Planned | Maximize social impact to glorify Jesus Christ through peace, justice, and liberty; influence policy through social media; generates advertising revenue as a side-effect. |
