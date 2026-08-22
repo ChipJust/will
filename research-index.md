@@ -9,9 +9,9 @@ uv run python D:/_code/will/tools/research_index.py --search "<topic>"
 uv run python D:/_code/will/tools/research_index.py --has-url "<url>"
 ```
 
-194 documents across 3 repos.
+195 documents across 3 repos.
 
-## health (46)
+## health (47)
 
 ### Agent reports
 
@@ -27,6 +27,10 @@ uv run python D:/_code/will/tools/research_index.py --has-url "<url>"
   - Q: Can iodine stimulate an atrophied thyroid remnant at TSH 0.84, or does recovery require LT4 down-titration? Form, dose, monitoring, Jod-Basedow surveillance.
   - Iodine is substrate not stimulus — TSH gates uptake 27-fold; 150mcg LT4 is full athyreotic dosing (post-lobectomy norm 1.3mcg/kg ~123mcg); recovery window closed ~12mo post-op; ashwagandha LOWERS TSH (counter-goal); best labs: Tg+TgAb, FT3/FT4 ratio, TPO, ultrasound
   - topics: iodine, thyroid, remnant, hemithyroidectomy, TSH, levothyroxine, jod-basedow, thyroglobulin, selenium, ashwagandha, NIS
+- **2026-08-22** [Maximizing Endogenous Melatonin and Circadian Function](health/research/agent-reports/2026-08-22-melatonin-circadian-optimization.md)
+  - Q: Light hygiene, melatonin supplementation, nutrients, suppressors, fluoride — what actually raises/protects melatonin?
+  - Almost nothing RAISES melatonin — protect (darkness), align (morning light, but sequencing is load-bearing), remove suppressors, substitute if amplitude deficient. Move glycine to pre-bed. Beta-blockers cut melatonin 50-80% (migraine prophylaxis risk). Melatonin 3mg IR is dual-purpose migraine+circadian. OSA blunts amplitude and CPAP does not fix it. Fix eating window close at 19:00. Tea is the biggest fluoride lever.
+  - topics: melatonin, circadian, light-hygiene, DLMO, blue-light, beta-blockers, glycine, ashwagandha, migraine, fluoride, reverse-osmosis, eating-window, NSAIDs, OSA, amplitude
 - **2026-08-22** [NAD Precursor Supplementation — 2026 Research Findings](health/research/agent-reports/2026-08-22-nad-precursor-introduction.md)
   - Q: NR vs NMN in 2026: which precursor, what dose, TMG pairing, stack interactions, safety, products
   - NR ~300-415mg recommended over NMN on verifiability; do not escalate to 1g (4PY/MACE signal); TMG optional; B-complex 80mg niacinamide should be swapped
