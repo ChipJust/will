@@ -9,9 +9,9 @@ uv run python D:/_code/will/tools/research_index.py --search "<topic>"
 uv run python D:/_code/will/tools/research_index.py --has-url "<url>"
 ```
 
-195 documents across 3 repos.
+196 documents across 3 repos.
 
-## health (47)
+## health (48)
 
 ### Agent reports
 
@@ -39,6 +39,10 @@ uv run python D:/_code/will/tools/research_index.py --has-url "<url>"
   - Q: What introduction ideas are pending across all 39 ingested refs, trackers, and reviews — and which refs were never evaluated?
   - Spermidine silently dropped; fatty-liver vitamin = high-dose niacin (rejected); DANA residue = hs-CRP + omega-3 index; 7 of 39 refs corrupt; 4 verdicts stale under new thyroid frame; TUDCA/banana/potassium dose gaps
   - topics: spermidine, niacin, dana, glycine, magnesium, tmg, tongkat-ali, krill, mk-7, lithium, boron, tudca, resistant-starch, corpus-quality
+- **2026-08-22** [Pineal Gland Calcification — Evidence Review](health/research/agent-reports/2026-08-22-pineal-calcification-evidence.md)
+  - Q: Is pineal calcification reversible? What does it do functionally? What does the fluoride literature actually show? How would you measure it?
+  - Reversal never demonstrated in any species; calcification-melatonin association is largely age confounding (n=1009 null); MK-4 is the brain K2 form; aMT6s by LC-MS (ZRT U-321 $295) is the right first measurement but only as personal baseline — ~45% of normals read low; Quest urine melatonin is the WRONG analyte
+  - topics: pineal, calcification, melatonin, aMT6s, DLMO, fluoride, luke-thesis, MGP, vitamin-k2, MK-4, imaging, CT, measurement, ZRT, assay-validity
 - **2026-08-22** [Daily Pool Swimming — Halogen Biochemistry, DBPs, and Sanitization](health/research/agent-reports/2026-08-22-pool-chemistry-halides-dbps.md)
   - Q: Does daily pool swimming harm the pineal or thyroid via halides or DBPs, and what should change?
   - Chloride concern fails mechanistically (NIS transports iodide but not chloride against 10^5 excess); no NIS in pineal, zero chlorine-pineal studies; real finding is CHLORATE accumulation (NIS-transported, thyroid-regulated endpoint, measurable ~$50); bromate bracket 190x stricter for daily swimmers; benefit dominates risk ~10x, daylight is the biggest benefit; morning swim optimal on all axes; secondary UV increases THMs
