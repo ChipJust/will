@@ -9,9 +9,9 @@ uv run python D:/_code/will/tools/research_index.py --search "<topic>"
 uv run python D:/_code/will/tools/research_index.py --has-url "<url>"
 ```
 
-191 documents across 3 repos.
+192 documents across 3 repos.
 
-## health (43)
+## health (44)
 
 ### Agent reports
 
@@ -19,6 +19,10 @@ uv run python D:/_code/will/tools/research_index.py --has-url "<url>"
   - Q: Which body-comp scale has the best measurement quality AND programmatic data access for a local-file ecosystem, Pixel 10 user?
   - Withings Body Scan $399 (or Body Comp $229) — only maker with a free documented OAuth2 API + CSV export + wifi sync; Hume Body Pod and Oxiline MD Pro eliminated
   - topics: scale, body-composition, BIA, withings, hume, oxiline, health-connect, api, data-pipeline
+- **2026-08-22** [Creatine for Brain/Cognitive Benefit — Dose-Response, Kinetics, and the 18g Question](health/research/agent-reports/2026-08-22-creatine-brain-dosing.md)
+  - Q: Is chronic 18g/day justified for brain effects, or does a lower/split dose serve the brain goal better?
+  - 10g/day as 2x5g recommended; brain ceiling +5-11% is dose-flat 1.5-20g, duration-driven; muscle competition ends at 2wk saturation; single 19-33g reserved for acute sleep deprivation; cystatin C resolves the eGFR artifact
+  - topics: creatine, brain, SLC6A8, BBB, MRS, dose-response, sleep-deprivation, homocysteine, GAMT, eGFR, cystatin-c, migraine
 - **2026-08-22** [Iodine Reintroduction & Thyroid Remnant-Lobe Recovery — Evidence Findings](health/research/agent-reports/2026-08-22-iodine-remnant-recovery.md)
   - Q: Can iodine stimulate an atrophied thyroid remnant at TSH 0.84, or does recovery require LT4 down-titration? Form, dose, monitoring, Jod-Basedow surveillance.
   - Iodine is substrate not stimulus — TSH gates uptake 27-fold; 150mcg LT4 is full athyreotic dosing (post-lobectomy norm 1.3mcg/kg ~123mcg); recovery window closed ~12mo post-op; ashwagandha LOWERS TSH (counter-goal); best labs: Tg+TgAb, FT3/FT4 ratio, TPO, ultrasound
