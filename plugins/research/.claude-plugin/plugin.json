@@ -1,0 +1,8 @@
+{
+  "name": "research",
+  "description": "Commission, persist, and index deep research. Check the local corpus before searching the web; harvest agent reports to markdown; keep the cross-repo research index current.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Chip Ueltschey"
+  }
+}

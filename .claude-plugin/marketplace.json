@@ -29,6 +29,12 @@
       "description": "Import files from a connected phone via MTP/USB. List, copy, and extract video frames.",
       "source": "./plugins/phone",
       "category": "productivity"
+    },
+    {
+      "name": "research",
+      "description": "Commission, persist, and index deep research. Corpus-first lookup, agent launch discipline, mandatory report harvesting into research/agent-reports/, index rebuild.",
+      "source": "./plugins/research",
+      "category": "productivity"
     }
   ]
 }
