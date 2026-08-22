@@ -9,9 +9,9 @@ uv run python D:/_code/will/tools/research_index.py --search "<topic>"
 uv run python D:/_code/will/tools/research_index.py --has-url "<url>"
 ```
 
-192 documents across 3 repos.
+194 documents across 3 repos.
 
-## health (44)
+## health (46)
 
 ### Agent reports
 
@@ -35,6 +35,14 @@ uv run python D:/_code/will/tools/research_index.py --has-url "<url>"
   - Q: What introduction ideas are pending across all 39 ingested refs, trackers, and reviews — and which refs were never evaluated?
   - Spermidine silently dropped; fatty-liver vitamin = high-dose niacin (rejected); DANA residue = hs-CRP + omega-3 index; 7 of 39 refs corrupt; 4 verdicts stale under new thyroid frame; TUDCA/banana/potassium dose gaps
   - topics: spermidine, niacin, dana, glycine, magnesium, tmg, tongkat-ali, krill, mk-7, lithium, boron, tudca, resistant-starch, corpus-quality
+- **2026-08-22** [Daily Pool Swimming — Halogen Biochemistry, DBPs, and Sanitization](health/research/agent-reports/2026-08-22-pool-chemistry-halides-dbps.md)
+  - Q: Does daily pool swimming harm the pineal or thyroid via halides or DBPs, and what should change?
+  - Chloride concern fails mechanistically (NIS transports iodide but not chloride against 10^5 excess); no NIS in pineal, zero chlorine-pineal studies; real finding is CHLORATE accumulation (NIS-transported, thyroid-regulated endpoint, measurable ~$50); bromate bracket 190x stricter for daily swimmers; benefit dominates risk ~10x, daylight is the biggest benefit; morning swim optimal on all axes; secondary UV increases THMs
+  - topics: chlorine, chloride, bromide, chlorate, bromate, NIS, DBP, trihalomethanes, pineal, melatonin, circadian, pool-sanitization, saltwater, exercise, bright-light, REDs
+- **2026-08-22** [Bromine vs Chlorine vs Saltwater Sanitizers](health/research/agent-reports/2026-08-22-pool-sanitizer-comparison.md)
+  - Q: Which pool sanitizer minimizes halide load and DBP toxicity?
+  - Bromine worse: 96-100% UV loss in 4h outdoors, 1.8x mutagenicity, feeds bromate; SWG is chemically a chlorine pool (-45% cytotoxicity but +73% brominated DBPs from salt impurity)
+  - topics: bromine, chlorine, saltwater, SWG, sanitizer, DBP, mutagenicity, salt-purity
 
 ### Ingested sources
 
