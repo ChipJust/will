@@ -9,7 +9,7 @@ uv run python D:/_code/will/tools/research_index.py --search "<topic>"
 uv run python D:/_code/will/tools/research_index.py --has-url "<url>"
 ```
 
-196 documents across 3 repos.
+197 documents across 3 repos.
 
 ## health (48)
 
@@ -94,10 +94,11 @@ uv run python D:/_code/will/tools/research_index.py --has-url "<url>"
 - [We Finally Know How To DECALCIFY The Pineal Gland](health/research/refs/we-finally-know-how-to-decalcify-the-pineal-gland.md) — <https://youtu.be/G1oHvJKf69g>
 - [Why I’m Starting this Cholesterol Drug (For My Brain)](health/research/refs/why-im-starting-this-cholesterol-drug-for-my-brain.md) — <https://youtu.be/5idzP5ghT7A>
 
-## home (2)
+## home (3)
 
 ### Ingested sources
 
+- [13 Fruit Trees That Survive Texas Heat (That Nobody Plants)](home/research/refs/13-fruit-trees-that-survive-texas-heat-that-nobody-plants.md) — <https://youtu.be/xWyGVKVTIAM>
 - [Don't Plant Lavender Alone: The Best Companion Plants for Lavender](home/research/refs/dont-plant-lavender-alone-the-best-companion-plants-for-lavender.md) — <https://youtu.be/SJy5wwUxmpQ?si=T7SFmWEMsDHQXjA_>
 - [Poured This Into My Dead Garden. Thousands of Worms Showed Up in 2 Days! Why Don't We Know About It?](home/research/refs/poured-this-into-my-dead-garden-thousands-of-worms-showed-up-in-2-days-why-dont.md) — <https://youtu.be/Q2mQ3Hot2aM?si=Hp2cmtrzhn2IFBSi>
 
