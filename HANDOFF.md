@@ -226,6 +226,9 @@ Needs Chip:
 
 ## Open system-level items
 
+- [ ] **WebFetch 403s on forum and small-nursery sites** (ourfigs.com, foodforestnursery.com). Those are exactly where hyper-local, trial-based evidence lives, so the research skill's evidence grading silently degrades to "search snippet only" with no fallback. Wants a general answer — a fetch fallback, or a documented convention for grading snippet-sourced claims — not a per-session workaround. (from home session 2026-09-05)
+- [ ] **Selection frameworks should name the axes they do *not* screen on.** `home/plans/plant-interests.md` screened hard on climate fit, toxicity, thorns and trial credibility, and never on eating quality — which produced a locked two-fig slate that turned out to be one flavor group served at two seasons. General failure mode for any criteria list in this ecosystem. (from home session 2026-09-05)
+- [ ] **The research skill's Step 3 (harvest) assumes a subagent transcript.** `harvest_agent_report.py --agent <id>` has no documented path for research done inline, even though inline is the *right* choice for a single-question round. Add a line: if you did the research yourself, write the report directly into `<repo>/research/agent-reports/` with the same frontmatter, then reindex. (from home session 2026-09-05)
 - [ ] Linux migration: dual-boot Ubuntu 24.04 on 240GB SATA SSD — actively wanted (2026-05-09); laptops are bought so the desktop is no longer blocked
 - [ ] AI accelerator: AMD RX 7900 XTX decided as GPU baseline; Wormhole n150d for PCIE3 later. AMD employee discount no longer being tracked here — Chip handles purchase pricing himself.
 - [ ] Bootstrap: test setup.sh end-to-end on a clean Linux machine

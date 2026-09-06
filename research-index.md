@@ -9,7 +9,7 @@ uv run python D:/_code/will/tools/research_index.py --search "<topic>"
 uv run python D:/_code/will/tools/research_index.py --has-url "<url>"
 ```
 
-197 documents across 3 repos.
+198 documents across 3 repos.
 
 ## health (48)
 
@@ -94,7 +94,14 @@ uv run python D:/_code/will/tools/research_index.py --has-url "<url>"
 - [We Finally Know How To DECALCIFY The Pineal Gland](health/research/refs/we-finally-know-how-to-decalcify-the-pineal-gland.md) — <https://youtu.be/G1oHvJKf69g>
 - [Why I’m Starting this Cholesterol Drug (For My Brain)](health/research/refs/why-im-starting-this-cholesterol-drug-for-my-brain.md) — <https://youtu.be/5idzP5ghT7A>
 
-## home (3)
+## home (4)
+
+### Agent reports
+
+- **2026-09-05** [Fig Flavor Groups and Flavor-First Cultivar Selection for Austin (Sept 2026)](home/research/agent-reports/2026-09-05-fig-flavor-groups-cultivar-selection.md)
+  - Q: What are the fig flavor groups, where do 'Alma' and 'Celeste' sit, and which higher-flavor cultivars are viable in Austin (humid summers, alkaline limestone, closed-eye requirement) for the wall-trough fig slots?
+  - Alma (Honey) and Celeste (Sugar) are adjacent groups on the same sweet/low-acid half of the map — the current pair is one flavor at two seasons. The flavor jump with the least added risk is Violette de Bordeaux (Bordeaux/resin-berry group: closed eye, documented rain resistance, naturally semi-dwarf, sold as a rooted tree by Bob Wells TX and Ison's GA). Smith/Texas BA-1 and Violette de Solliès are the higher-ceiling options; Solliès has an Austin grower rating it above Black Madeira for this area.
+  - topics: fig, ficus-carica, cultivar-selection, flavor-groups, austin, humid-climate, closed-eye, rain-resistance, violette-de-bordeaux, smith, texas-ba-1, violette-de-sollies, hardy-chicago, alma, celeste, wall-trough
 
 ### Ingested sources
 
