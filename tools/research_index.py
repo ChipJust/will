@@ -13,8 +13,12 @@ Both carry YAML frontmatter. `refs` frontmatter comes from tools/ingest.py
 (title, source_url, ingest_date, ingest_method, quality_score). Agent reports add
 type/date/repo/topics/question/key_findings.
 
-Input:  repo scan of D:/_code/* (or --root), no arguments needed
+Input:  repo scan of D:/_code/* (or --root, which accepts either the ecosystem
+        root or a single repo path), no arguments needed
 Output: writes will/research-index.md, prints a one-line summary to stdout
+
+Exit codes: 0 found / wrote, 1 searched with no match, 2 bad --root or empty
+corpus. Never conflate 2 with 1 — an unreadable corpus is not an empty one.
 
 Sample:
     $ uv run python tools/research_index.py
@@ -39,8 +43,10 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
-# Windows cp1252 silently corrupts special characters; force UTF-8 on stdout.
+# Windows cp1252 silently corrupts special characters; force UTF-8 on both
+# streams — error messages carry em dashes too.
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
 
 DEFAULT_ROOT = Path("D:/_code")
 INDEX_PATH = DEFAULT_ROOT / "will" / "research-index.md"
@@ -123,19 +129,39 @@ def load_doc(path: Path, repo: str, kind: str) -> Doc:
     return doc
 
 
+def is_repo(path: Path) -> bool:
+    """True if path itself holds a corpus, i.e. it is a repo and not the root."""
+    return any((path / sub).is_dir() for sub in SCAN_DIRS)
+
+
+def collect(repo_dir: Path, repo: str) -> list[Doc]:
+    docs: list[Doc] = []
+    for sub in SCAN_DIRS:
+        target = repo_dir / sub
+        if not target.is_dir():
+            continue
+        kind = "ref" if sub.endswith("refs") else "agent-report"
+        for md in sorted(target.glob("*.md")):
+            docs.append(load_doc(md, repo, kind))
+    return docs
+
+
 def scan(root: Path) -> list[Doc]:
+    """All docs under an ecosystem root, or under a single repo passed as root.
+
+    Accepting a repo path matters: `--root D:/_code/home` used to scan that
+    repo's subdirectories looking for repos, find none, and let --search report
+    "corpus does not cover this" — a silent false negative that green-lights
+    web research the corpus already answered.
+    """
+    if is_repo(root):
+        return collect(root, root.name)
     docs: list[Doc] = []
     for repo_dir in sorted(p for p in root.iterdir() if p.is_dir()):
         repo = repo_dir.name
         if repo.startswith(".") or repo in SKIP_REPOS:
             continue
-        for sub in SCAN_DIRS:
-            target = repo_dir / sub
-            if not target.is_dir():
-                continue
-            kind = "ref" if sub.endswith("refs") else "agent-report"
-            for md in sorted(target.glob("*.md")):
-                docs.append(load_doc(md, repo, kind))
+        docs.extend(collect(repo_dir, repo))
     return docs
 
 
@@ -260,6 +286,17 @@ def main() -> int:
         return 2
 
     docs = scan(args.root)
+
+    # An empty corpus is a broken --root, not an answer. Saying "no match" here
+    # would tell a caller the corpus lacks the topic when it was never read.
+    if not docs:
+        print(
+            f"error: no research corpus found under {args.root.as_posix()}\n"
+            f"       expected <root>/<repo>/{SCAN_DIRS[0]}/ or <root>/{SCAN_DIRS[0]}/\n"
+            f"       this is NOT the same as 'no match' — fix --root before trusting a search",
+            file=sys.stderr,
+        )
+        return 2
 
     if args.search:
         return cmd_search(docs, args.search)

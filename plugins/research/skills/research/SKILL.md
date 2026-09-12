@@ -13,7 +13,8 @@ Tools (both in `will/tools/`, docstrings have full I/O samples):
 - `research_index.py` — search/index the cross-repo corpus (`research/refs/` +
   `research/agent-reports/` in every repo)
 - `harvest_agent_report.py` — extract a completed agent's final report from its
-  transcript into `<repo>/research/agent-reports/` with frontmatter
+  transcript into `<repo>/research/agent-reports/` with frontmatter; `--dump`
+  salvages the raw fetched pages from an agent that was killed before reporting
 
 ## Step 1 — Corpus first, always
 
@@ -31,6 +32,9 @@ uv run python D:/_code/will/tools/research_index.py --has-url "<url>"
 
 - Hits → Read those documents first. Only research the *gaps*.
 - No hits → the tool says web research is justified. Proceed.
+- Don't pass `--root`; the default scans every repo. A `--root` naming one repo
+  works too, but an unreadable root now exits 2 with an error rather than
+  reporting "corpus does not cover this" — never treat exit 2 as a green light.
 - Note what the corpus already covers in the agent prompt so the agent doesn't
   redo it ("Our corpus already covers X and Y — do not research those").
 
@@ -54,8 +58,10 @@ When commissioning research agents:
 3. **Cap the fleet.** Default max 4 concurrent research agents. More requires the
    user's explicit spend approval (they are paying per token).
 4. While agents run, audit cheaply if needed: transcripts live under
-   `%LOCALAPPDATA%/Temp/claude/<project>/<session>/tasks/*.output`; use
-   `harvest_agent_report.py --list` to see who is DONE vs RUNNING.
+   `~/.claude/projects/<project>/<session>/subagents/agent-*.jsonl` (older
+   sessions: `%LOCALAPPDATA%/Temp/claude/<project>/<session>/tasks/*.output`);
+   use `harvest_agent_report.py --list`, which reads both layouts, to see who is
+   DONE vs NO REPORT.
 5. If an agent stalls waiting on its own children, send it a wrap-up directive via
    SendMessage rather than letting it idle.
 
@@ -74,10 +80,25 @@ uv run python D:/_code/will/tools/harvest_agent_report.py --agent <id> \
 
 - `--repo` is the subject repo (health, home, money…), NOT will.
 - Verify the word count printed is plausibly the full report (thousands of words,
-  not tens). A tiny count means the agent's last text was a status line — the
-  report may not exist yet, or arrived via the task notification instead; in that
-  case write the notification text to the same path by hand (Write tool), same
-  frontmatter.
+  not tens).
+- **If the agent never reported** (killed by a session end, cancelled, or still
+  running), the tool refuses and says so — it will not write an interim status
+  line as a report. Its fetched pages are still on disk and are the expensive
+  part, so salvage rather than re-run:
+
+  ```
+  uv run python D:/_code/will/tools/harvest_agent_report.py --agent <id> --dump
+  ```
+
+  That writes every tool result and the agent's own notes to a temp file. Read it
+  in slices, then write the report yourself (next bullet). Do not re-launch the
+  same research.
+- **If you did the research inline** (the right choice for a single-question
+  round) or synthesized it from a `--dump`, there is no transcript to harvest:
+  write the report directly to `<repo>/research/agent-reports/<date>-<slug>.md`
+  with the same frontmatter (`title`, `type: agent-report`, `date`, `repo`,
+  `question`, `key_findings`, `topics`), then reindex. State in the report how it
+  was produced, so its evidence grading is readable later.
 - Personal-data boundary still applies: if the report contains the user's clinical
   or financial specifics, harvest to the `-personal` repo instead.
 
