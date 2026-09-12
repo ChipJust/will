@@ -9,7 +9,7 @@ uv run python D:/_code/will/tools/research_index.py --search "<topic>"
 uv run python D:/_code/will/tools/research_index.py --has-url "<url>"
 ```
 
-198 documents across 3 repos.
+199 documents across 3 repos.
 
 ## health (48)
 
@@ -94,10 +94,14 @@ uv run python D:/_code/will/tools/research_index.py --has-url "<url>"
 - [We Finally Know How To DECALCIFY The Pineal Gland](health/research/refs/we-finally-know-how-to-decalcify-the-pineal-gland.md) — <https://youtu.be/G1oHvJKf69g>
 - [Why I’m Starting this Cholesterol Drug (For My Brain)](health/research/refs/why-im-starting-this-cholesterol-drug-for-my-brain.md) — <https://youtu.be/5idzP5ghT7A>
 
-## home (4)
+## home (5)
 
 ### Agent reports
 
+- **2026-09-12** [Flagstone Joint Groundcover Sourcing — Creeping Thyme, Roman Chamomile, Frogfruit, Horseherb (Austin, Sept 2026)](home/research/agent-reports/2026-09-12-joint-groundcover-sourcing.md)
+  - Q: Where can we actually buy plugs/pots of the decided joint plants — creeping thyme cultivars, Roman chamomile, Texas frogfruit, horseherb — for an October 2026 planting in Austin, by mail order and locally?
+  - Mail-order thyme is in a fall stock trough: all seven High Country Gardens creeping thyme cultivars are out of stock (fall ship window for zones 7-8-9 opened Sept 28), and Mountain Valley Growers' plug trays are out for the small-leaf cultivars that matter ('Elfin', 'Pink Chintz', Mint). MVG's 3-inch pot channel at $5.95 is the reliable thyme backbone, and plugtrays.com has a literal 'Flagstone Filler Thymes' category — but a tray is 128 plugs, likely far more than the joint count needs. Roman chamomile has exactly one verified in-stock source: Crimson Sage, $8.50, 13 in stock, ships Aug–Oct. Locally, It's About Thyme — named twice in plant-sourcing.md as the first call for bay laurel and herbs — has been CLOSED SINCE SUMMER 2018. Frogfruit is the hardest item: sold out at Lone Star Nursery and absent from the Wildflower Center's 67-species fall list, which does carry horseherb. Every Austin retail nursery requires a phone call — none publish live inventory.
+  - topics: sourcing, flagstone-joints, groundcover, creeping-thyme, thymus, roman-chamomile, chamaemelum-nobile, frogfruit, phyla-nodiflora, horseherb, calyptocarpus-vialis, plugs, plug-trays, austin, mail-order, native-plant-sales, fall-planting, october-2026
 - **2026-09-05** [Fig Flavor Groups and Flavor-First Cultivar Selection for Austin (Sept 2026)](home/research/agent-reports/2026-09-05-fig-flavor-groups-cultivar-selection.md)
   - Q: What are the fig flavor groups, where do 'Alma' and 'Celeste' sit, and which higher-flavor cultivars are viable in Austin (humid summers, alkaline limestone, closed-eye requirement) for the wall-trough fig slots?
   - Alma (Honey) and Celeste (Sugar) are adjacent groups on the same sweet/low-acid half of the map — the current pair is one flavor at two seasons. The flavor jump with the least added risk is Violette de Bordeaux (Bordeaux/resin-berry group: closed eye, documented rain resistance, naturally semi-dwarf, sold as a rooted tree by Bob Wells TX and Ison's GA). Smith/Texas BA-1 and Violette de Solliès are the higher-ceiling options; Solliès has an Austin grower rating it above Black Madeira for this area.
