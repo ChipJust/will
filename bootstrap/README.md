@@ -6,9 +6,25 @@ default** and print exactly what they would do; nothing changes until you pass
 
 | Script | Purpose | When |
 |---|---|---|
-| `bootstrap.py` | git, gh, Node, uv, Claude Code, GitHub auth, git config, clone repos, `uv sync`, plugins | first, after `setup.sh` |
+| `mount_drives.py` | persistent `/etc/fstab` mounts for the carried-over drives | **first** — nothing else works until the drives are mounted |
+| `bootstrap.py` | git, gh, Node, uv, Claude Code, GitHub auth, git config, adopt/clone repos, `uv sync`, plugins | after the drives are up |
 | `harden.py` | unattended-upgrades, UFW default-deny, key-only SSH, Tailscale check, posture audit | day one, at the console |
-| `restore.py` | copy staged Windows data off the old NTFS drive into `$HOME` | once the old drive is mounted |
+| `restore.py` | copy staged Windows data off the old NTFS drive into `$HOME` | once `/srv/nas` is mounted |
+
+## Before you wipe Windows
+
+**Turn off Fast Startup.** Measured ON on the source machine 2026-10-07. A
+Windows "shut down" with it enabled is a hybrid hibernate that leaves every NTFS
+volume flagged dirty, and `ntfs3` then refuses a read-write mount — so
+`/workspace` and `/srv/nas` come up read-only and the staged 63.85 GB on E: is
+unwritable. As Administrator:
+
+```
+powercfg /h off
+```
+
+then reboot. (A `Restart` also bypasses Fast Startup, but `powercfg /h off` is
+the reliable fix.)
 
 ## Usage
 
@@ -24,9 +40,21 @@ source ~/.bashrc                               # pick up uv + claude on PATH
 ### Linux — migration (the 2026-10 desktop-homelab case)
 
 The repo drive came across from the old machine, so **there is nothing to
-clone.** Mount it and point `--workspace` at the existing tree:
+clone.** But a fresh install mounts only root/EFI/swap — the carried-over drives
+are unmounted partitions until you say otherwise. Mount them first:
 
 ```bash
+python3 bootstrap/mount_drives.py              # preview
+sudo -v && python3 bootstrap/mount_drives.py --execute
+```
+
+That writes `/etc/fstab` entries for `Data -> /workspace`,
+`Old Data -> /srv/nas`, `Old C -> /srv/media`, backs up the old fstab, runs
+`findmnt --verify` before committing, and gives every entry `nofail` so a
+missing or dirty drive can never block a boot. Then:
+
+```bash
+cd /workspace/_code/will
 bash setup.sh
 python3 bootstrap/bootstrap.py --workspace /workspace/_code              # preview
 python3 bootstrap/bootstrap.py --execute --workspace /workspace/_code
