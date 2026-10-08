@@ -76,16 +76,34 @@ Show the user what you found in config.json:
 Ask: "Does this look right?"
 
 ### 5. Run the full bootstrap
-On Linux:
+
+On Linux — preview first, then apply. It is dry-run by default:
 ```bash
-bash bootstrap/setup.sh
+python3 bootstrap/bootstrap.py
+python3 bootstrap/bootstrap.py --execute
 ```
 On Windows:
 ```powershell
 .\bootstrap\setup.ps1
 ```
 
-Watch the output. If something fails, diagnose and fix before continuing.
+Watch the output. Steps are independent — a failure does not abort the run, and
+the summary lists everything that failed. Diagnose those before continuing.
+
+Note: `bootstrap.py` installs `gh` itself, so step 2 above works even on a
+machine where only `setup.sh` has run.
+
+### 5b. Security posture and data restore
+
+After the bootstrap, two further tools (both dry-run by default):
+```bash
+python3 bootstrap/harden.py      # unattended-upgrades, UFW, SSH, Tailscale audit
+python3 bootstrap/restore.py     # staged data off a previous machine's drive
+```
+
+`harden.py` refuses to enable the firewall over SSH, and refuses to disable SSH
+password auth unless `authorized_keys` is already populated. Run it at the
+physical console. See `bootstrap/README.md`.
 
 ### 6. Verify
 After bootstrap completes:

@@ -1,47 +1,83 @@
-# Bootstrap — One-Step Workstation Setup
+# Bootstrap — workstation setup
 
-Run a single script from the will repo to configure any machine as Chip's
-development workstation. The script detects the OS and handles the rest.
+Three Python tools, run in order on a fresh machine. All three are **dry-run by
+default** and print exactly what they would do; nothing changes until you pass
+`--execute`.
+
+| Script | Purpose | When |
+|---|---|---|
+| `bootstrap.py` | git, gh, Node, uv, Claude Code, GitHub auth, git config, clone repos, `uv sync`, plugins | first, after `setup.sh` |
+| `harden.py` | unattended-upgrades, UFW default-deny, key-only SSH, Tailscale check, posture audit | day one, at the console |
+| `restore.py` | copy staged Windows data off the old NTFS drive into `$HOME` | once the old drive is mounted |
 
 ## Usage
 
-### Windows (PowerShell, run as Administrator)
+### Linux
+
+```bash
+bash setup.sh                                  # stage 0: git + python3 only
+python3 bootstrap/bootstrap.py                 # preview
+python3 bootstrap/bootstrap.py --execute       # apply
+source ~/.bashrc                               # pick up uv + claude on PATH
+
+python3 bootstrap/harden.py                    # preview
+python3 bootstrap/harden.py --execute          # apply (run at the physical console)
+
+python3 bootstrap/restore.py --source /srv/nas/_migration
+python3 bootstrap/restore.py --source /srv/nas/_migration --execute --only home
+```
+
+### Windows
+
 ```powershell
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 .\bootstrap\setup.ps1
 ```
 
-### Linux
-```bash
-bash bootstrap/setup.sh
-```
+`setup.ps1` is unchanged and still the Windows path. The Python tools target
+Linux.
 
-## What it does
+## Why Python replaced `bootstrap/setup.sh`
 
-1. Installs system package manager if needed (winget, apt, brew)
-2. Installs core tools: git, gh, uv, Node.js, Claude Code, Android platform-tools
-3. Authenticates GitHub CLI (`gh auth login` — interactive)
-4. Clones all ChipJust repos to the workspace directory
-5. Runs `uv sync` in each repo that has a `pyproject.toml`
-6. Installs Claude Code global plugins (will repo contains plugin definitions)
-7. Prints a post-setup checklist
+The old shell engine was removed in favour of `bootstrap.py`. It had four
+problems worth remembering, since they are the kind of thing that recurs:
 
-## Workspace layout
+1. **`curl | bash` three times** — NodeSource, nvm, and the uv installer were
+   piped straight into a shell. That directly contradicts the security posture
+   recorded in `projects/desktop-homelab/STATUS.md` ("install from apt/signed
+   vendor repos only"). Node now comes from the Ubuntu archive and uv from
+   pipx. The one remaining `curl` fetches GitHub's apt *signing key*, which apt
+   then uses to verify packages — a signed repo, not an unsigned script.
+2. **Two Node strategies in one repo** — NodeSource in the root `setup.sh`, nvm
+   in `bootstrap/setup.sh`.
+3. **An ordering bug** — `SETUP.md` step 2 told the setup agent to run
+   `gh auth status`, but the root `setup.sh` never installed `gh`.
+4. **Cascading failure** — `set -euo pipefail` meant one unclonable repo aborted
+   the whole run. `spatium` is local-only and not on GitHub, so this would have
+   fired on the first real use. Each step is now independent and the summary
+   reports what failed.
 
-All repos clone to a single workspace directory:
-- **Windows:** `D:\_code\`
-- **Linux:** `~/code/`
+`setup.sh` survives as stage 0 only, because something has to run before Python
+is guaranteed. It installs git and python3, then hands off.
 
-## Post-setup (manual steps)
+## Dependencies
 
-- [ ] Configure Git signing if desired
-- [ ] Run `gh auth login` and select SSH
-- [ ] Install KDE Connect on both desktop and Pixel 7
-- [ ] Set up Syncthing if folder sync is needed
-- [ ] Install any AI model weights to the models directory
-- [ ] Verify `uv run python tools/ingest.py` works in health and money repos
+`bootstrap.py` uses **stdlib only** — it has to work before `uv` exists. Do not
+add third-party imports to it. The same applies to `harden.py` and `restore.py`
+so they stay runnable on a half-built system.
 
-## Adding new tools to bootstrap
+## Post-setup checklist
 
-Edit `setup.ps1` or `setup.sh` and add to the relevant install block.
-Both scripts are idempotent — safe to re-run.
+- [ ] `source ~/.bashrc` or open a new terminal
+- [ ] Verify `claude` launches and plugins loaded (restart Claude Code after plugin install)
+- [ ] `gh auth setup-git` ran — check `git config --global credential.helper`
+- [ ] Tailscale: install from the apt repo for this release, then `sudo tailscale up`
+- [ ] Verify a key-based SSH login *before* closing the console session
+- [ ] ADR 0006 Phase B obligation: `gocryptfs`/`fscrypt` over the sensitive `/srv/nas` trees
+- [ ] Still open in STATUS.md: a backup destination for irreplaceable family data
+
+## Adding a step
+
+Add it to the relevant phase function in `bootstrap.py` and make it idempotent —
+check for the thing before installing it, and record `skip` when it is already
+there. Every step must be safe to re-run.

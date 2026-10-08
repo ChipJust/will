@@ -1,49 +1,39 @@
 #!/usr/bin/env bash
-# Minimal first-time setup for the will system.
-# Installs only what is needed to run Claude Code, then exits.
-# Claude handles everything else.
+# Stage 0 for the will system — the only shell in the bootstrap path.
+#
+# Its entire job is to guarantee git and python3 exist, then hand off to
+# bootstrap/bootstrap.py, which does the real work in Python. Everything that
+# used to live here (Node via NodeSource, uv via a piped installer, Claude Code)
+# moved into bootstrap.py so there is exactly one implementation of each step.
 #
 # Usage: bash setup.sh
 
 set -euo pipefail
 
-BOLD="\033[1m"
-CYAN="\033[36m"
-GREEN="\033[32m"
-RESET="\033[0m"
-
+BOLD="\033[1m"; CYAN="\033[36m"; GREEN="\033[32m"; RESET="\033[0m"
 step() { echo -e "\n${CYAN}==> $*${RESET}"; }
 ok()   { echo -e "${GREEN}    ok: $*${RESET}"; }
-skip() { echo    "    --: $* (already installed)"; }
+skip() { echo    "    --: $* (already present)"; }
 
 echo -e "${BOLD}"
-echo "  will — system setup"
-echo "  Installing prerequisites for Claude Code..."
+echo "  will — stage 0"
+echo "  Ensuring git and python3, then handing off to bootstrap.py"
 echo -e "${RESET}"
 
-# ---------------------------------------------------------------------------
-# Detect package manager
-# ---------------------------------------------------------------------------
 if command -v apt-get &>/dev/null; then
-    PKG_UPDATE="sudo apt-get update -qq"
-    PKG="sudo apt-get install -y"
+    PKG="sudo apt-get install -y -q"
+    sudo apt-get update -qq
 elif command -v dnf &>/dev/null; then
-    PKG_UPDATE="true"
     PKG="sudo dnf install -y"
 elif command -v brew &>/dev/null; then
-    PKG_UPDATE="brew update"
     PKG="brew install"
 else
-    echo "ERROR: No supported package manager (apt, dnf, brew)." >&2
-    echo "Install git, curl, and Node.js manually, then re-run." >&2
+    echo "ERROR: no supported package manager (apt, dnf, brew)." >&2
+    echo "Install git and python3 manually, then run:" >&2
+    echo "  python3 bootstrap/bootstrap.py" >&2
     exit 1
 fi
 
-$PKG_UPDATE
-
-# ---------------------------------------------------------------------------
-# git
-# ---------------------------------------------------------------------------
 step "git"
 if command -v git &>/dev/null; then
     skip "git $(git --version | awk '{print $3}')"
@@ -52,75 +42,32 @@ else
     ok "git installed"
 fi
 
-# ---------------------------------------------------------------------------
-# curl
-# ---------------------------------------------------------------------------
-step "curl"
-if command -v curl &>/dev/null; then
-    skip "curl"
+step "python3"
+if command -v python3 &>/dev/null; then
+    skip "python3 $(python3 --version | awk '{print $2}')"
 else
-    $PKG curl
-    ok "curl installed"
+    $PKG python3
+    ok "python3 installed"
 fi
 
-# ---------------------------------------------------------------------------
-# Node.js (required for Claude Code)
-# ---------------------------------------------------------------------------
-step "Node.js"
-if command -v node &>/dev/null; then
-    skip "node $(node --version)"
-else
-    if command -v apt-get &>/dev/null; then
-        curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
-        sudo apt-get install -y nodejs
-    elif command -v dnf &>/dev/null; then
-        $PKG nodejs npm
-    else
-        brew install node
-    fi
-    ok "node $(node --version)"
-fi
-
-# ---------------------------------------------------------------------------
-# uv (Python package manager used by all repos)
-# ---------------------------------------------------------------------------
-step "uv"
-if command -v uv &>/dev/null; then
-    skip "uv $(uv --version)"
-else
-    curl -LsSf https://astral.sh/uv/install.sh | sh
-    export PATH="$HOME/.local/bin:$PATH"
-    ok "uv installed"
-fi
-
-# ---------------------------------------------------------------------------
-# Claude Code
-# ---------------------------------------------------------------------------
-step "Claude Code"
-if command -v claude &>/dev/null; then
-    skip "claude"
-else
-    npm install -g @anthropic-ai/claude-code
-    ok "Claude Code installed"
-fi
-
-# ---------------------------------------------------------------------------
-# Done — hand off to Claude
-# ---------------------------------------------------------------------------
 WILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo
-echo -e "${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
+echo -e "${BOLD}────────────────────────────────────────────────────────────${RESET}"
 echo
-echo -e "  Prerequisites installed. ${BOLD}Do not launch Claude yet.${RESET}"
+echo "  Stage 0 done. Now run the Python bootstrap — it previews"
+echo "  everything first and changes nothing until you pass --execute:"
 echo
-echo "  If your terminal needs a restart to pick up new PATH entries:"
-echo "    source ~/.bashrc   (or open a new terminal)"
+echo -e "    ${BOLD}${CYAN}python3 ${WILL_DIR}/bootstrap/bootstrap.py${RESET}"
 echo
-echo "  Then, from this directory, run:"
+echo "  Then, to apply:"
 echo
-echo -e "    ${BOLD}${CYAN}claude${RESET}"
+echo -e "    ${BOLD}${CYAN}python3 ${WILL_DIR}/bootstrap/bootstrap.py --execute${RESET}"
 echo
-echo "  Claude will read SETUP.md and walk you through the rest."
+echo "  That installs gh, Node, uv and Claude Code, authenticates GitHub,"
+echo "  clones your repos and installs plugins. Afterwards:"
 echo
-echo -e "${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
+echo "    python3 bootstrap/harden.py      # security posture"
+echo "    python3 bootstrap/restore.py     # staged data off the old drive"
+echo
+echo -e "${BOLD}────────────────────────────────────────────────────────────${RESET}"
