@@ -1,6 +1,9 @@
 # 0001. Use Ubuntu 24.04 LTS as the base operating system
 
-Status: Accepted (2026-05-09)
+Status: **Superseded (2026-10-07)** by
+[0005](0005-ubuntu-2604-supersedes-2404.md) — Ubuntu 26.04 LTS ships ROCm in the official
+archive and is listed in AMD's compatibility matrix, inverting this ADR's central
+assumption about vendor-support lag. Distro-family reasoning below still stands.
 
 ## Context
 
