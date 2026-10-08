@@ -12,14 +12,44 @@ default** and print exactly what they would do; nothing changes until you pass
 
 ## Usage
 
-### Linux
+### Linux — fresh machine
 
 ```bash
 bash setup.sh                                  # stage 0: git + python3 only
 python3 bootstrap/bootstrap.py                 # preview
-python3 bootstrap/bootstrap.py --execute       # apply
+python3 bootstrap/bootstrap.py --execute       # apply, clones repos from GitHub
 source ~/.bashrc                               # pick up uv + claude on PATH
+```
 
+### Linux — migration (the 2026-10 desktop-homelab case)
+
+The repo drive came across from the old machine, so **there is nothing to
+clone.** Mount it and point `--workspace` at the existing tree:
+
+```bash
+bash setup.sh
+python3 bootstrap/bootstrap.py --workspace /workspace/_code              # preview
+python3 bootstrap/bootstrap.py --execute --workspace /workspace/_code
+source ~/.bashrc
+```
+
+Existing checkouts are adopted, not re-cloned. Cloning a second copy would be
+worse than redundant — you would work in fresh clones while the real history,
+local branches and uncommitted work sat on the other mount.
+
+Adoption fixes three things that otherwise bite on a carried-over NTFS volume:
+
+- `safe.directory` — git refuses repos whose ownership does not match the local
+  uid ("dubious ownership") and will not run at all without this.
+- `core.fileMode false` — NTFS has no exec bit, so git reports a mode change on
+  essentially every file and `git status` becomes unreadable.
+- Windows-built `.venv` — contains `Scripts/*.exe` rather than `bin/`. `uv` will
+  not repair it in place, so it is removed before `uv sync` rebuilds it. As of
+  2026-10-07 this affects `health`, `home`, `money`, `spatium`, `will`, `writing`.
+
+### Then, on either path
+
+```bash
 python3 bootstrap/harden.py                    # preview
 python3 bootstrap/harden.py --execute          # apply (run at the physical console)
 

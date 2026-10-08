@@ -8,12 +8,32 @@ the repo set, syncs Python environments, and installs Claude Code plugins.
 Runs on the system python3 with **stdlib only** — it has to work before uv
 exists. Ubuntu ships python3, so there is nothing to install first.
 
+Two situations, and they are not the same:
+
+    1. FRESH MACHINE — no repos anywhere. Everything gets cloned from GitHub.
+    2. MIGRATION — the repo drive came across from the old machine and is
+       mounted. The checkouts already exist, carrying real history, local
+       branches and possibly uncommitted work. Cloning a second copy into
+       ~/code would be worse than redundant: you would end up working in fresh
+       clones while your actual state sat on the other mount.
+
+    Case 2 is handled by pointing --workspace at the mounted tree. Existing
+    checkouts are adopted rather than re-cloned, and two things get fixed that
+    otherwise make git unusable across an NTFS mount: safe.directory (git
+    refuses repos whose ownership does not match the local uid) and
+    core.fileMode false (NTFS has no exec bit, so git reports a mode change on
+    every file). A .venv built under Windows is removed before `uv sync`, since
+    it contains Scripts/*.exe rather than bin/ and uv will not repair it.
+
 Usage:
     # Preview every action; nothing is changed (default)
     python3 bootstrap/bootstrap.py
 
     # Actually do it
     python3 bootstrap/bootstrap.py --execute
+
+    # Migration: adopt the repos already on the carried-over drive
+    python3 bootstrap/bootstrap.py --execute --workspace /workspace/_code
 
     # Skip phases
     python3 bootstrap/bootstrap.py --execute --skip-clone --skip-plugins
@@ -72,6 +92,39 @@ def record(status: str, name: str, detail: str = "") -> None:
 # ---------------------------------------------------------------------------
 def have(cmd: str) -> bool:
     return shutil.which(cmd) is not None
+
+
+def filesystem_for(path: Path) -> str:
+    """Filesystem type backing `path`, from /proc/mounts. '' if undeterminable.
+
+    Used to detect repos living on a mounted NTFS volume, which needs different
+    git settings than a native ext4 checkout.
+    """
+    mounts = Path("/proc/mounts")
+    if not mounts.is_file():
+        return ""
+    try:
+        target = path.resolve()
+    except OSError:
+        return ""
+    best: tuple[int, str] = (-1, "")
+    for line in mounts.read_text(encoding="utf-8", errors="replace").splitlines():
+        parts = line.split()
+        if len(parts) < 3:
+            continue
+        mount_point, fstype = parts[1], parts[2]
+        try:
+            mp = Path(mount_point).resolve()
+        except OSError:
+            continue
+        if target == mp or mp in target.parents:
+            depth = len(mp.parts)
+            if depth > best[0]:
+                best = (depth, fstype)
+    return best[1]
+
+
+FOREIGN_FS = {"ntfs", "ntfs3", "fuseblk", "vfat", "exfat", "msdos"}
 
 
 def run(args: list[str], check: bool = True, capture: bool = True, env=None) -> subprocess.CompletedProcess:
@@ -344,13 +397,52 @@ def configure_git(cfg: dict, execute: bool) -> None:
             record("ok", f"git config {key}", value)
 
 
+def adopt_mounted_repo(repo: Path, execute: bool) -> None:
+    """Make an existing checkout on a foreign filesystem usable from Linux.
+
+    A repo cloned under Windows and reached through an NTFS mount needs two
+    settings, or git is unusable:
+      - safe.directory: the mount's ownership does not match the local uid, so
+        git refuses to operate on the repo at all ("dubious ownership").
+      - core.fileMode false: NTFS carries no exec bit, so git reports a mode
+        change on essentially every file and `git status` is pure noise.
+    """
+    fstype = filesystem_for(repo)
+    if fstype not in FOREIGN_FS:
+        return
+
+    safe = out(["git", "config", "--global", "--get-all", "safe.directory"])
+    if str(repo) not in safe.splitlines():
+        if execute:
+            run(["git", "config", "--global", "--add", "safe.directory", str(repo)])
+            record("ok", f"{repo.name}: safe.directory", f"added ({fstype})")
+        else:
+            record("plan", f"{repo.name}: git config --global --add safe.directory {repo}")
+
+    current = out(["git", "-C", str(repo), "config", "core.fileMode"])
+    if current != "false":
+        if execute:
+            run(["git", "-C", str(repo), "config", "core.fileMode", "false"])
+            record("ok", f"{repo.name}: core.fileMode", f"false ({fstype} has no exec bit)")
+        else:
+            record("plan", f"{repo.name}: git -C {repo} config core.fileMode false")
+
+
 def clone_repos(cfg: dict, user: str, workspace: Path, execute: bool) -> list[Path]:
-    step(f"Cloning repos to {workspace}")
+    step(f"Repos in {workspace}")
+    fstype = filesystem_for(workspace)
+    if fstype in FOREIGN_FS:
+        print(f"    workspace is on {fstype} — existing checkouts will be adopted, "
+              f"not re-cloned")
     cloned: list[Path] = []
     for name in cfg.get("repos", []):
         dest = workspace / name
         if (dest / ".git").is_dir():
-            record("skip", name, "already cloned")
+            # Already here — the migration case. The repo carries real history,
+            # local branches and possibly uncommitted work; cloning a second
+            # copy elsewhere would be actively harmful.
+            record("skip", name, "already present — adopted, not cloned")
+            adopt_mounted_repo(dest, execute)
             cloned.append(dest)
             continue
         repo = f"{user}/{name}"
@@ -381,6 +473,22 @@ def sync_repos(repos: list[Path], execute: bool) -> None:
         if not (repo / "pyproject.toml").is_file():
             record("skip", repo.name, "no pyproject.toml")
             continue
+
+        # A .venv built on Windows has Scripts/ and .exe shims instead of bin/.
+        # uv will not repair it in place, and leaving it means every `uv run`
+        # either fails or silently uses the wrong interpreter.
+        venv = repo / ".venv"
+        if venv.is_dir() and (venv / "Scripts").is_dir() and not (venv / "bin").is_dir():
+            if execute:
+                try:
+                    shutil.rmtree(venv)
+                    record("ok", f"{repo.name}: .venv", "removed Windows-built venv")
+                except OSError as exc:
+                    record("fail", f"{repo.name}: .venv", f"could not remove: {exc}")
+                    continue
+            else:
+                record("plan", f"{repo.name}: remove Windows-built .venv, then uv sync")
+
         if not execute:
             record("plan", f"uv sync in {repo}")
             continue
@@ -416,7 +524,10 @@ def main() -> int:
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     p.add_argument("--execute", action="store_true", help="actually make changes (default is dry-run)")
-    p.add_argument("--skip-clone", action="store_true", help="skip repo cloning and uv sync")
+    p.add_argument("--workspace", help="override the workspace path from config.json — "
+                                       "point this at an existing checkout tree (e.g. a "
+                                       "mounted drive carried over from a previous machine)")
+    p.add_argument("--skip-clone", action="store_true", help="skip repo adoption/cloning and uv sync")
     p.add_argument("--skip-plugins", action="store_true", help="skip Claude Code plugin install")
     args = p.parse_args()
 
@@ -438,8 +549,10 @@ def main() -> int:
     cfg = load_config(user, workspace, args.execute) if user else None
 
     if cfg:
-        ws = cfg.get("workspace", {}).get("linux", "~/code")
+        ws = args.workspace or cfg.get("workspace", {}).get("linux", "~/code")
         workspace = Path(os.path.expanduser(ws))
+        if args.workspace:
+            print(f"\n    workspace overridden: {workspace}")
         configure_git(cfg, args.execute)
         if not args.skip_clone:
             repos = clone_repos(cfg, user, workspace, args.execute)
